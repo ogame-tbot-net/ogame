@@ -1398,6 +1398,65 @@ func GetCaptchaHandler(c echo.Context) error {
 	return c.HTML(http.StatusOK, "no captcha found")
 }
 
+// GetCaptchaHandler ...
+func GetCaptchaChallengeIDHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+
+	gameEnvironmentID, platformGameID, err := getConfiguration(bot)
+	if err != nil {
+		return c.HTML(http.StatusOK, err.Error())
+	}
+
+	//var out postSessionsResponse
+	payload := url.Values{
+		"autoGameAccountCreation": {"false"},
+		"gameEnvironmentId":       {gameEnvironmentID},
+		"platformGameId":          {platformGameID},
+		"gfLang":                  {"en"},
+		"locale":                  {"en_GB"},
+		"identity":                {bot.Username},
+		"password":                {bot.password},
+	}
+	req, err := http.NewRequest("POST", "https://gameforge.com/api/v1/auth/thin/sessions", strings.NewReader(payload.Encode()))
+	if err != nil {
+		return c.HTML(http.StatusOK, err.Error())
+	}
+
+	if bot.otpSecret != "" {
+		passcode, err := totp.GenerateCodeCustom(bot.otpSecret, time.Now(), totp.ValidateOpts{
+			Period:    30,
+			Skew:      1,
+			Digits:    otp.DigitsSix,
+			Algorithm: otp.AlgorithmSHA1,
+		})
+		if err != nil {
+			return c.HTML(http.StatusOK, err.Error())
+		}
+		req.Header.Add("tnt-2fa-code", passcode)
+		req.Header.Add("tnt-installation-id", "")
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
+
+	resp, err := bot.doReqWithLoginProxyTransport(req)
+	if err != nil {
+		return c.HTML(http.StatusBadRequest, err.Error())
+	}
+	if resp.StatusCode == 403 {
+		defer resp.Body.Close()
+		data403, _, _ := readBody(resp)
+		return c.HTML(http.StatusForbidden, string(data403))
+	}
+
+	if resp.StatusCode == 409 {
+		challengeID := resp.Header.Get(gfChallengeID)
+		challengeID = strings.Replace(challengeID, ";https://challenge.gameforge.com", "", -1)
+		return c.JSON(http.StatusOK, SuccessResp(challengeID))
+	}
+	return c.JSON(http.StatusNotFound, "no captcha found")	
+}
+
 // GetCaptchaImgHandler ...
 func GetCaptchaImgHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
