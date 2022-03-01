@@ -319,6 +319,7 @@ func start(c *cli.Context) error {
 	e.POST("/bot/planets/:planetID/cancel-building", ogame.CancelBuildingHandler)
 	e.POST("/bot/planets/:planetID/cancel-research", ogame.CancelResearchHandler)
 	e.GET("/bot/planets/:planetID/resources", ogame.GetResourcesHandler)
+	e.POST("/bot/planets/:planetID/flighttime", ogame.FlightTimeHandler)
 	e.POST("/bot/planets/:planetID/send-fleet", ogame.SendFleetHandler)
 	e.POST("/bot/planets/:planetID/send-ipm", ogame.SendIPMHandler)
 	e.GET("/bot/moons/:moonID/phalanx/:galaxy/:system/:position", ogame.PhalanxHandler)
@@ -332,6 +333,7 @@ func start(c *cli.Context) error {
 	// For AntiGame plugin
 	// Static content
 	e.GET("/cdn/*", ogame.GetStaticHandler)
+	e.GET("/assets/css/*", ogame.GetStaticHandler)
 	e.GET("/headerCache/*", ogame.GetStaticHandler)
 	e.GET("/favicon.ico", ogame.GetStaticHandler)
 	e.GET("/game/sw.js", ogame.GetStaticHandler)

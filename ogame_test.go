@@ -2660,6 +2660,24 @@ func TestExtractEspionageReportV71(t *testing.T) {
 	assert.Equal(t, Collector, infos.CharacterClass)
 }
 
+func TestExtractEspionageReportAllianceClass(t *testing.T) {
+	pageHTMLBytes, _ := ioutil.ReadFile("samples/v8.1/en/spy_report_alliance_class_trader.html")
+	infos, _ := NewExtractorV71().ExtractEspionageReport(pageHTMLBytes, time.FixedZone("OGT", 3600))
+	assert.Equal(t, Trader, infos.AllianceClass)
+
+	pageHTMLBytes, _ = ioutil.ReadFile("samples/v8.1/en/spy_report_alliance_class_warrior.html")
+	infos, _ = NewExtractorV71().ExtractEspionageReport(pageHTMLBytes, time.FixedZone("OGT", 3600))
+	assert.Equal(t, Warrior, infos.AllianceClass)
+
+	//pageHTMLBytes, _ = ioutil.ReadFile("samples/v8.1/en/spy_report_alliance_class_researcher.html")
+	//infos, _ = NewExtractorV71().ExtractEspionageReport(pageHTMLBytes, time.FixedZone("OGT", 3600))
+	//assert.Equal(t, Researcher, infos.AllianceClass)
+
+	pageHTMLBytes, _ = ioutil.ReadFile("samples/v8.1/en/spy_report_alliance_no_class.html")
+	infos, _ = NewExtractorV71().ExtractEspionageReport(pageHTMLBytes, time.FixedZone("OGT", 3600))
+	assert.Equal(t, NoAllianceClass, infos.AllianceClass)
+}
+
 func TestExtractEspionageReportHonorableV71(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("samples/v7.1/en/spy_report_honorable.html")
 	infos, _ := NewExtractorV71().ExtractEspionageReport(pageHTMLBytes, time.FixedZone("OGT", 3600))
@@ -3023,6 +3041,26 @@ func TestFixAttackEvents(t *testing.T) {
 	}
 	fixAttackEvents(attacks, planets)
 	assert.Equal(t, PlanetType, attacks[0].Destination.Type) // Did not change
+}
+
+func TestExtractEmpirePlanets(t *testing.T) {
+	pageHTMLBytes, _ := ioutil.ReadFile("samples/v8.1/en/empire_planets.html")
+	res, _ := NewExtractorV6().ExtractEmpire(pageHTMLBytes)
+	assert.Equal(t, 8, len(res))
+	assert.Equal(t, Coordinate{Galaxy: 4, System: 208, Position: 8, Type: PlanetType}, res[0].Coordinate)
+	assert.Equal(t, int64(-3199), res[0].Resources.Energy)
+	assert.Equal(t, int64(13904), res[0].Diameter)
+}
+
+func TestExtractEmpireMoons(t *testing.T) {
+	pageHTMLBytes, _ := ioutil.ReadFile("samples/v8.1/en/empire_moons.html")
+	res, _ := NewExtractorV6().ExtractEmpire(pageHTMLBytes)
+	assert.Equal(t, 3, len(res))
+	assert.Equal(t, Coordinate{Galaxy: 4, System: 116, Position: 9, Type: MoonType}, res[0].Coordinate)
+	assert.Equal(t, int64(0), res[0].Resources.Energy)
+	assert.Equal(t, int64(-19), res[0].Temperature.Min)
+	assert.Equal(t, int64(21), res[0].Temperature.Max)
+	assert.Equal(t, int64(5783), res[0].Diameter)
 }
 
 func TestExtractAuction_playerBid(t *testing.T) {
