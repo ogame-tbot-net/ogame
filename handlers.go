@@ -1452,6 +1452,16 @@ func GetCaptchaChallengeIDHandler(c echo.Context) error {
 	if resp.StatusCode == 409 {
 		challengeID := resp.Header.Get(gfChallengeID)
 		challengeID = strings.Replace(challengeID, ";https://challenge.gameforge.com", "", -1)
+		
+		req, err = http.NewRequest("GET", "https://image-drop-challenge.gameforge.com/challenge/"+challengeID+"/en-GB", strings.NewReader(payload.Encode()))
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+		resp, err = bot.doReqWithLoginProxyTransport(req)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+		
 		return c.JSON(http.StatusOK, SuccessResp(challengeID))
 	}
 	return c.JSON(http.StatusNotFound, "no captcha found")	
