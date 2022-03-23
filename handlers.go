@@ -52,6 +52,12 @@ func TasksHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, SuccessResp(bot.GetTasks()))
 }
 
+// GetIPHandler ...
+func GetIPHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+	return c.JSON(http.StatusOK, SuccessResp(bot.GetIP()))
+}
+
 // GetServerHandler ...
 func GetServerHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
@@ -1452,7 +1458,7 @@ func GetCaptchaChallengeIDHandler(c echo.Context) error {
 	if resp.StatusCode == 409 {
 		challengeID := resp.Header.Get(gfChallengeID)
 		challengeID = strings.Replace(challengeID, ";https://challenge.gameforge.com", "", -1)
-		
+
 		req, err = http.NewRequest("GET", "https://image-drop-challenge.gameforge.com/challenge/"+challengeID+"/en-GB", strings.NewReader(payload.Encode()))
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err.Error())
@@ -1461,10 +1467,10 @@ func GetCaptchaChallengeIDHandler(c echo.Context) error {
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
-		
+
 		return c.JSON(http.StatusOK, SuccessResp(challengeID))
 	}
-	return c.JSON(http.StatusNotFound, "no captcha found")	
+	return c.JSON(http.StatusNotFound, "no captcha found")
 }
 
 // GetCaptchaImgHandler ...

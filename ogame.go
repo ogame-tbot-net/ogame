@@ -3923,7 +3923,7 @@ func (b *OGame) build(celestialID CelestialID, id ID, nbr int64) error {
 		"type":      {strconv.FormatInt(int64(id), 10)},
 		"cp":        {strconv.FormatInt(int64(celestialID), 10)},
 	}
-	
+
 	token, err := getToken(b, page, celestialID)
 	if err != nil {
 		return err
@@ -5231,6 +5231,23 @@ func (b *OGame) GetLanguage() string {
 // SetUserAgent change the user-agent used by the http client
 func (b *OGame) SetUserAgent(newUserAgent string) {
 	b.Client.UserAgent = newUserAgent
+}
+
+// GetIP get the current IP of the bot
+func (b *OGame) GetIP() string {
+	resp, err := b.Client.Get("https://api.ipify.org/?format=json")
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	var ipResp struct {
+		IP string `json:"ip"`
+	}
+	if err := json.Unmarshal(body, &ipResp); err != nil {
+		return ""
+	}
+	return ipResp.IP
 }
 
 // LoginWithBearerToken to ogame server reusing existing token
