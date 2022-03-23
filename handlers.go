@@ -55,7 +55,11 @@ func TasksHandler(c echo.Context) error {
 // GetIPHandler ...
 func GetIPHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
-	return c.JSON(http.StatusOK, SuccessResp(bot.GetIP()))
+	ip, err := bot.GetPublicIP()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResp(500, err.Error()))
+	}
+	return c.JSON(http.StatusOK, SuccessResp(ip))
 }
 
 // GetServerHandler ...

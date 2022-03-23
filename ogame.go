@@ -5233,23 +5233,6 @@ func (b *OGame) SetUserAgent(newUserAgent string) {
 	b.Client.UserAgent = newUserAgent
 }
 
-// GetIP get the current IP of the bot
-func (b *OGame) GetIP() string {
-	resp, err := b.Client.Get("https://api.ipify.org/?format=json")
-	if err != nil {
-		return ""
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	var ipResp struct {
-		IP string `json:"ip"`
-	}
-	if err := json.Unmarshal(body, &ipResp); err != nil {
-		return ""
-	}
-	return ipResp.IP
-}
-
 // LoginWithBearerToken to ogame server reusing existing token
 func (b *OGame) LoginWithBearerToken(token string) (bool, error) {
 	return b.WithPriority(Normal).LoginWithBearerToken(token)
