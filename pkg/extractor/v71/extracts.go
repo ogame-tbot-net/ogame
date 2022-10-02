@@ -307,7 +307,7 @@ type planetTechsResp struct {
 	Num13101 int64 `json:"13101"`
 	Num13102 int64 `json:"13102"`
 	Num13103 int64 `json:"13103"`
-	Num12304 int64 `json:"12304"`
+	Num13104 int64 `json:"13104"`
 	Num13105 int64 `json:"13105"`
 	Num13106 int64 `json:"13106"`
 	Num13107 int64 `json:"13107"`
@@ -439,7 +439,7 @@ func extractTechs(pageHTML []byte) (supplies ogame.ResourcesBuildings, facilitie
 		AssemblyLine:               res.Num13101,
 		FusionCellFactory:          res.Num13102,
 		RoboticsResearchCentre:     res.Num13103,
-		UpdateNetwork:              res.Num12304,
+		UpdateNetwork:              res.Num13104,
 		QuantumComputerCentre:      res.Num13105,
 		AutomatisedAssemblyCentre:  res.Num13106,
 		HighPerformanceTransformer: res.Num13107,
