@@ -6,10 +6,12 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // ParseInt ...
@@ -133,4 +135,43 @@ func ReadBody(resp *http.Response) (respContent []byte, err error) {
 		return []byte{}, err
 	}
 	return by, nil
+}
+
+type Equalable[T any] interface {
+	Equal(other T) bool
+}
+
+func InArray[T Equalable[T]](needle T, haystack []T) bool {
+	for _, el := range haystack {
+		if needle.Equal(el) {
+			return true
+		}
+	}
+	return false
+}
+
+// Random generates a number between min and max inclusively
+func Random(min, max int64) int64 {
+	if min == max {
+		return min
+	}
+	if max < min {
+		min, max = max, min
+	}
+	return rand.Int63n(max-min+1) + min
+}
+
+// RandDuration generates random duration
+func RandDuration(min, max time.Duration) time.Duration {
+	n := Random(min.Nanoseconds(), max.Nanoseconds())
+	return time.Duration(n) * time.Nanosecond
+}
+
+func randDur(min, max int64, dur time.Duration) time.Duration {
+	return RandDuration(time.Duration(min)*dur, time.Duration(max)*dur)
+}
+
+// RandMs generates random duration in milliseconds
+func RandMs(min, max int64) time.Duration {
+	return randDur(min, max, time.Millisecond)
 }

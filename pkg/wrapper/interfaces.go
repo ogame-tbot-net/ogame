@@ -73,9 +73,9 @@ type Prioritizable interface {
 	GetEmpireJSON(nbr int64) (any, error)
 	GetEspionageReport(msgID int64) (ogame.EspionageReport, error)
 	GetEspionageReportFor(ogame.Coordinate) (ogame.EspionageReport, error)
-	GetEspionageReportMessages() ([]ogame.EspionageReportSummary, error)
+	GetEspionageReportMessages(maxPage int64) ([]ogame.EspionageReportSummary, error)
 	GetExpeditionMessageAt(time.Time) (ogame.ExpeditionMessage, error)
-	GetExpeditionMessages() ([]ogame.ExpeditionMessage, error)
+	GetExpeditionMessages(maxPage int64) ([]ogame.ExpeditionMessage, error)
 	GetFleets(...Option) ([]ogame.Fleet, ogame.Slots)
 	GetFleetsFromEventList() []ogame.Fleet
 	GetItems(ogame.CelestialID) ([]ogame.Item, error)
@@ -102,6 +102,7 @@ type Prioritizable interface {
 	SendMessageAlliance(associationID int64, message string) error
 	ServerTime() time.Time
 	SetInitiator(initiator string) Prioritizable
+	SetPreferences(ogame.Preferences) error
 	SetVacationMode() error
 	Tx(clb func(tx Prioritizable) error) error
 	UseDM(string, ogame.CelestialID) error

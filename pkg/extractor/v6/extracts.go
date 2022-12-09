@@ -595,7 +595,7 @@ func extractFleetDispatchACSFromDoc(doc *goquery.Document) []ogame.ACSValues {
 	return out
 }
 
-func extractEspionageReportMessageIDsFromDoc(doc *goquery.Document) ([]ogame.EspionageReportSummary, int64) {
+func extractEspionageReportMessageIDsFromDoc(doc *goquery.Document) ([]ogame.EspionageReportSummary, int64, error) {
 	msgs := make([]ogame.EspionageReportSummary, 0)
 	nbPage := utils.DoParseI64(doc.Find("ul.pagination li").Last().AttrOr("data-page", "1"))
 	doc.Find("li.msg").Each(func(i int, s *goquery.Selection) {
@@ -627,10 +627,10 @@ func extractEspionageReportMessageIDsFromDoc(doc *goquery.Document) ([]ogame.Esp
 			}
 		}
 	})
-	return msgs, nbPage
+	return msgs, nbPage, nil
 }
 
-func extractCombatReportMessagesFromDoc(doc *goquery.Document) ([]ogame.CombatReportSummary, int64) {
+func extractCombatReportMessagesFromDoc(doc *goquery.Document) ([]ogame.CombatReportSummary, int64, error) {
 	msgs := make([]ogame.CombatReportSummary, 0)
 	nbPage := utils.DoParseI64(doc.Find("ul.pagination li").Last().AttrOr("data-page", "1"))
 	doc.Find("li.msg").Each(func(i int, s *goquery.Selection) {
@@ -680,7 +680,7 @@ func extractCombatReportMessagesFromDoc(doc *goquery.Document) ([]ogame.CombatRe
 			}
 		}
 	})
-	return msgs, nbPage
+	return msgs, nbPage, nil
 }
 
 func extractEspionageReportFromDoc(doc *goquery.Document, location *time.Location) (ogame.EspionageReport, error) {
@@ -968,27 +968,32 @@ func extractResourcesProductionsFromDoc(doc *goquery.Document) (ogame.Resources,
 
 func extractPreferencesFromDoc(doc *goquery.Document) ogame.Preferences {
 	prefs := ogame.Preferences{
-		SpioAnz:                      extractSpioAnzFromDoc(doc),
-		DisableChatBar:               extractDisableChatBarFromDoc(doc),
-		DisableOutlawWarning:         extractDisableOutlawWarningFromDoc(doc),
-		MobileVersion:                extractMobileVersionFromDoc(doc),
-		ShowOldDropDowns:             extractShowOldDropDownsFromDoc(doc),
-		ActivateAutofocus:            extractActivateAutofocusFromDoc(doc),
-		EventsShow:                   extractEventsShowFromDoc(doc),
-		SortSetting:                  extractSortSettingFromDoc(doc),
-		SortOrder:                    extractSortOrderFromDoc(doc),
-		ShowDetailOverlay:            extractShowDetailOverlayFromDoc(doc),
-		AnimatedSliders:              extractAnimatedSlidersFromDoc(doc),
-		AnimatedOverview:             extractAnimatedOverviewFromDoc(doc),
-		PopupsNotices:                extractPopupsNoticesFromDoc(doc),
-		PopopsCombatreport:           extractPopopsCombatreportFromDoc(doc),
-		SpioReportPictures:           extractSpioReportPicturesFromDoc(doc),
-		MsgResultsPerPage:            extractMsgResultsPerPageFromDoc(doc),
-		AuctioneerNotifications:      extractAuctioneerNotificationsFromDoc(doc),
-		EconomyNotifications:         extractEconomyNotificationsFromDoc(doc),
-		ShowActivityMinutes:          extractShowActivityMinutesFromDoc(doc),
-		PreserveSystemOnPlanetChange: extractPreserveSystemOnPlanetChangeFromDoc(doc),
-		UrlaubsModus:                 extractUrlaubsModus(doc),
+		SpioAnz:                            extractSpioAnzFromDoc(doc),
+		SpySystemAutomaticQuantity:         extractSpySystemAutomaticQuantityFromDoc(doc),
+		SpySystemTargetPlanetTypes:         extractSpySystemTargetPlanetTypesFromDoc(doc),
+		SpySystemTargetPlayerTypes:         extractSpySystemTargetPlayerTypesFromDoc(doc),
+		SpySystemIgnoreSpiedInLastXMinutes: extractSpySystemIgnoreSpiedInLastXMinutesFromDoc(doc),
+		DisableChatBar:                     extractDisableChatBarFromDoc(doc),
+		DisableOutlawWarning:               extractDisableOutlawWarningFromDoc(doc),
+		MobileVersion:                      extractMobileVersionFromDoc(doc),
+		ShowOldDropDowns:                   extractShowOldDropDownsFromDoc(doc),
+		ActivateAutofocus:                  extractActivateAutofocusFromDoc(doc),
+		EventsShow:                         extractEventsShowFromDoc(doc),
+		SortSetting:                        extractSortSettingFromDoc(doc),
+		SortOrder:                          extractSortOrderFromDoc(doc),
+		ShowDetailOverlay:                  extractShowDetailOverlayFromDoc(doc),
+		AnimatedSliders:                    extractAnimatedSlidersFromDoc(doc),
+		AnimatedOverview:                   extractAnimatedOverviewFromDoc(doc),
+		PopupsNotices:                      extractPopupsNoticesFromDoc(doc),
+		PopopsCombatreport:                 extractPopopsCombatreportFromDoc(doc),
+		SpioReportPictures:                 extractSpioReportPicturesFromDoc(doc),
+		MsgResultsPerPage:                  extractMsgResultsPerPageFromDoc(doc),
+		AuctioneerNotifications:            extractAuctioneerNotificationsFromDoc(doc),
+		EconomyNotifications:               extractEconomyNotificationsFromDoc(doc),
+		ShowActivityMinutes:                extractShowActivityMinutesFromDoc(doc),
+		PreserveSystemOnPlanetChange:       extractPreserveSystemOnPlanetChangeFromDoc(doc),
+		DiscoveryWarningEnabled:            extractDiscoveryWarningEnabledFromDoc(doc),
+		UrlaubsModus:                       extractUrlaubsModus(doc),
 	}
 	if prefs.MobileVersion {
 		prefs.Notifications.BuildList = extractNotifBuildListFromDoc(doc)
@@ -1246,6 +1251,16 @@ func extractSpioAnzFromDoc(doc *goquery.Document) int64 {
 	return out
 }
 
+func extractSpySystemAutomaticQuantityFromDoc(doc *goquery.Document) int64 {
+	out := utils.DoParseI64(doc.Find("input[name=spySystemAutomaticQuantity]").AttrOr("value", "0"))
+	return out
+}
+
+func extractSpySystemIgnoreSpiedInLastXMinutesFromDoc(doc *goquery.Document) int64 {
+	out := utils.DoParseI64(doc.Find("input[name=spySystemIgnoreSpiedInLastXMinutes]").AttrOr("value", "0"))
+	return out
+}
+
 func extractDisableChatBarFromDoc(doc *goquery.Document) bool {
 	_, exists := doc.Find("input[name=disableChatBar]").Attr("checked")
 	return exists
@@ -1278,6 +1293,14 @@ func extractActivateAutofocusFromDoc(doc *goquery.Document) bool {
 
 func extractEventsShowFromDoc(doc *goquery.Document) int64 {
 	return utils.DoParseI64(doc.Find("select[name=eventsShow] option[selected]").AttrOr("value", "1"))
+}
+
+func extractSpySystemTargetPlanetTypesFromDoc(doc *goquery.Document) int64 {
+	return utils.DoParseI64(doc.Find("select[name=spySystemTargetPlanetTypes] option[selected]").AttrOr("value", "0"))
+}
+
+func extractSpySystemTargetPlayerTypesFromDoc(doc *goquery.Document) int64 {
+	return utils.DoParseI64(doc.Find("select[name=spySystemTargetPlayerTypes] option[selected]").AttrOr("value", "0"))
 }
 
 func extractSortSettingFromDoc(doc *goquery.Document) int64 {
@@ -1339,6 +1362,11 @@ func extractShowActivityMinutesFromDoc(doc *goquery.Document) bool {
 
 func extractPreserveSystemOnPlanetChangeFromDoc(doc *goquery.Document) bool {
 	_, exists := doc.Find("input[name=preserveSystemOnPlanetChange]").Attr("checked")
+	return exists
+}
+
+func extractDiscoveryWarningEnabledFromDoc(doc *goquery.Document) bool {
+	_, exists := doc.Find("input[name=discoveryWarningEnabled]").Attr("checked")
 	return exists
 }
 
