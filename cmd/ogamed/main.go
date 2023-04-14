@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/alaingilbert/ogame/pkg/device"
+	"github.com/alaingilbert/ogame/pkg/tlsclientconfig"
 	"github.com/alaingilbert/ogame/pkg/wrapper"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -213,6 +214,12 @@ func main() {
 			Value:   "",
 			EnvVars: []string{"NJA_API_KEY"},
 		},
+		// cookies-filename DEPRECATED Only for compatibility TBot this parameter have to be removed soon!
+		&cli.StringFlag{
+			Name:    "cookies-filename",
+			Usage:   "[DEPRECATED] Path to Cookie File",
+			EnvVars: []string{"OGAMED_COOKIEFILENAME"},
+		},
 	}
 	app.Action = start
 	if err := app.Run(os.Args); err != nil {
@@ -302,6 +309,8 @@ func start(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
+
+	tlsclientconfig.AddRoundTripper(deviceInst.GetClient().Transport)
 
 	params := wrapper.Params{
 		Device:         deviceInst,
