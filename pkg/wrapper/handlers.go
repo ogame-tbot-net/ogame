@@ -880,7 +880,7 @@ func GetPriceHandler(c echo.Context) error {
 }
 
 // SendFleetHandler ...
-// curl 127.0.0.1:1234/bot/planets/123/send-fleet -d 'ships=203,1&ships=204,10&speed=10&galaxy=1&system=1&type=1&position=1&mission=3&metal=1&crystal=2&deuterium=3'
+// curl 127.0.0.1:1234/bot/planets/123/send-fleet -d 'galaxy=1&system=1&position=1'
 func SendFleetHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
 	planetID, err := utils.ParseI64(c.Param("planetID"))
@@ -1002,6 +1002,53 @@ func SendFleetHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, ErrorResp(500, err.Error()))
 	}
 	return c.JSON(http.StatusOK, SuccessResp(fleet))
+}
+
+// SendDiscoveryHandler ...
+// curl 127.0.0.1:1234/bot/planets/123/send-discovery -d 'galaxy=1&system=1&type=1&position=1'
+func SendDiscoveryHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+	planetID, err := utils.ParseI64(c.Param("planetID"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid planet id"))
+	}
+
+	if err := c.Request().ParseForm(); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid form"))
+	}
+
+	where := ogame.Coordinate{Type: ogame.PlanetType}
+	for key, values := range c.Request().PostForm {
+		switch key {
+		case "galaxy":
+			galaxy, err := utils.ParseI64(values[0])
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid galaxy"))
+			}
+			where.Galaxy = galaxy
+		case "system":
+			system, err := utils.ParseI64(values[0])
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid system"))
+			}
+			where.System = system
+		case "position":
+			position, err := utils.ParseI64(values[0])
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid position"))
+			}
+			where.Position = position
+		}
+	}
+
+	res, err := bot.SendDiscovery(ogame.CelestialID(planetID), where)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, err.Error()))
+	}
+	if res == false {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "failed to send discovery"))
+	}
+	return c.JSON(http.StatusOK, SuccessResp(res))
 }
 
 // GetAlliancePageContentHandler ...
