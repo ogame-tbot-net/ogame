@@ -909,7 +909,7 @@ func TestExtractShipsWhileBeingBuilt(t *testing.T) {
 
 func TestExtractEspionageReportMessageIDs(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/unversioned/messages.html")
-	msgs, _ := NewExtractor().ExtractEspionageReportMessageIDs(pageHTMLBytes)
+	msgs, _, _ := NewExtractor().ExtractEspionageReportMessageIDs(pageHTMLBytes)
 	assert.Equal(t, 2, len(msgs))
 	assert.Equal(t, ogame.Report, msgs[0].Type)
 	assert.Equal(t, ogame.Coordinate{4, 117, 6, ogame.PlanetType}, msgs[0].Target)
@@ -922,7 +922,7 @@ func TestExtractEspionageReportMessageIDs(t *testing.T) {
 
 func TestExtractEspionageReportMessageIDsLootPercentage(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/unversioned/messages_loot_percentage.html")
-	msgs, _ := NewExtractor().ExtractEspionageReportMessageIDs(pageHTMLBytes)
+	msgs, _, _ := NewExtractor().ExtractEspionageReportMessageIDs(pageHTMLBytes)
 	assert.Equal(t, 1.0, msgs[0].LootPercentage)
 	assert.Equal(t, 0.5, msgs[1].LootPercentage)
 	assert.Equal(t, 0.5, msgs[2].LootPercentage)
@@ -930,13 +930,13 @@ func TestExtractEspionageReportMessageIDsLootPercentage(t *testing.T) {
 
 func TestExtractCombatReportMessages(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/unversioned/combat_reports_msgs.html")
-	msgs, _ := NewExtractor().ExtractCombatReportMessagesSummary(pageHTMLBytes)
+	msgs, _, _ := NewExtractor().ExtractCombatReportMessagesSummary(pageHTMLBytes)
 	assert.Equal(t, 9, len(msgs))
 }
 
 func TestExtractCombatReportAttackingMessages(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/unversioned/combat_reports_msgs_attacking.html")
-	msgs, _ := NewExtractor().ExtractCombatReportMessagesSummary(pageHTMLBytes)
+	msgs, _, _ := NewExtractor().ExtractCombatReportMessagesSummary(pageHTMLBytes)
 	assert.Equal(t, int64(7945368), msgs[0].ID)
 	assert.Equal(t, ogame.Coordinate{4, 233, 11, ogame.PlanetType}, msgs[0].Destination)
 	assert.Equal(t, int64(50), msgs[0].Loot)
@@ -951,7 +951,7 @@ func TestExtractCombatReportAttackingMessages(t *testing.T) {
 
 func TestExtractCombatReportMessagesSummary(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/unversioned/combat_reports_msgs_2.html")
-	msgs, nbPages := NewExtractor().ExtractCombatReportMessagesSummary(pageHTMLBytes)
+	msgs, nbPages, _ := NewExtractor().ExtractCombatReportMessagesSummary(pageHTMLBytes)
 	assert.Equal(t, 10, len(msgs))
 	assert.Equal(t, int64(44), nbPages)
 	assert.Equal(t, ogame.Coordinate{4, 116, 12, ogame.MoonType}, msgs[1].Destination)
@@ -2411,7 +2411,7 @@ func TestExtractEspionageReport_inactivetimer_over1h(t *testing.T) {
 
 func TestExtractFleetSlotV7_movement(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/v7/movement.html")
-	s := NewExtractor().ExtractSlots(pageHTMLBytes)
+	s, _ := NewExtractor().ExtractSlots(pageHTMLBytes)
 	assert.Equal(t, int64(1), s.InUse)
 	assert.Equal(t, int64(2), s.Total)
 	assert.Equal(t, int64(0), s.ExpInUse)
@@ -2420,7 +2420,7 @@ func TestExtractFleetSlotV7_movement(t *testing.T) {
 
 func TestExtractFleetSlot_fleet1(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/unversioned/fleet1.html")
-	s := NewExtractor().ExtractSlots(pageHTMLBytes)
+	s, _ := NewExtractor().ExtractSlots(pageHTMLBytes)
 	assert.Equal(t, int64(2), s.InUse)
 	assert.Equal(t, int64(14), s.Total)
 	assert.Equal(t, int64(0), s.ExpInUse)
@@ -2429,7 +2429,7 @@ func TestExtractFleetSlot_fleet1(t *testing.T) {
 
 func TestExtractFleetSlot_movement(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/unversioned/fleets_1.html")
-	s := NewExtractor().ExtractSlots(pageHTMLBytes)
+	s, _ := NewExtractor().ExtractSlots(pageHTMLBytes)
 	assert.Equal(t, int64(1), s.InUse)
 	assert.Equal(t, int64(11), s.Total)
 	assert.Equal(t, int64(0), s.ExpInUse)
@@ -2438,7 +2438,7 @@ func TestExtractFleetSlot_movement(t *testing.T) {
 
 func TestExtractFleetSlot_commanders(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/unversioned/fleet1_extract_slots_with_commanders.html")
-	s := NewExtractor().ExtractSlots(pageHTMLBytes)
+	s, _ := NewExtractor().ExtractSlots(pageHTMLBytes)
 	assert.Equal(t, int64(13), s.InUse)
 	assert.Equal(t, int64(14), s.Total)
 	assert.Equal(t, int64(2), s.ExpInUse)

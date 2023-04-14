@@ -94,11 +94,11 @@ type OverviewExtractorBytesDoc interface {
 }
 
 type FleetsExtractorBytes interface {
-	ExtractSlots(pageHTML []byte) ogame.Slots
+	ExtractSlots(pageHTML []byte) (ogame.Slots, error)
 }
 
 type FleetsExtractorDoc interface {
-	ExtractSlotsFromDoc(doc *goquery.Document) ogame.Slots
+	ExtractSlotsFromDoc(doc *goquery.Document) (ogame.Slots, error)
 }
 
 type MovementExtractorBytes interface {
@@ -266,11 +266,11 @@ type BuffActivationExtractorBytes interface {
 }
 
 type MessagesCombatReportExtractorBytes interface {
-	ExtractCombatReportMessagesSummary(pageHTML []byte) ([]ogame.CombatReportSummary, int64)
+	ExtractCombatReportMessagesSummary(pageHTML []byte) ([]ogame.CombatReportSummary, int64, error)
 }
 
 type MessagesCombatReportExtractorDoc interface {
-	ExtractCombatReportMessagesFromDoc(doc *goquery.Document) ([]ogame.CombatReportSummary, int64)
+	ExtractCombatReportMessagesFromDoc(doc *goquery.Document) ([]ogame.CombatReportSummary, int64, error)
 }
 
 type MessagesCombatReportExtractorBytesDoc interface {
@@ -304,11 +304,11 @@ type EspionageReportExtractorBytesDoc interface {
 
 // MessagesEspionageReportExtractorBytes ajax page that display all espionage reports summaries
 type MessagesEspionageReportExtractorBytes interface {
-	ExtractEspionageReportMessageIDs(pageHTML []byte) ([]ogame.EspionageReportSummary, int64)
+	ExtractEspionageReportMessageIDs(pageHTML []byte) ([]ogame.EspionageReportSummary, int64, error)
 }
 
 type MessagesEspionageReportExtractorDoc interface {
-	ExtractEspionageReportMessageIDsFromDoc(doc *goquery.Document) ([]ogame.EspionageReportSummary, int64)
+	ExtractEspionageReportMessageIDsFromDoc(doc *goquery.Document) ([]ogame.EspionageReportSummary, int64, error)
 }
 
 type MessagesEspionageReportExtractorBytesDoc interface {
@@ -333,6 +333,11 @@ type MessagesExpeditionExtractorBytesDoc interface {
 // FederationExtractorBytes popup when we click to create a union for our attacking fleet
 type FederationExtractorBytes interface {
 	ExtractFederation(pageHTML []byte) url.Values
+}
+
+// GalaxyPageExtractorBytes galaxy page
+type GalaxyPageExtractorBytes interface {
+	ExtractAvailableDiscoveries(pageHTML []byte) int64
 }
 
 // GalaxyExtractorBytes ajax page containing galaxy information in galaxy page
@@ -515,6 +520,7 @@ type Extractor interface {
 	FetchResourcesExtractorBytes
 	FetchTechsExtractorBytes
 	GalaxyExtractorBytes
+	GalaxyPageExtractorBytes
 	JumpGateLayerExtractorBytes
 	MessagesMarketplaceExtractorBytes
 	PhalanxExtractorBytes

@@ -184,7 +184,7 @@ func (e *Extractor) extractFleets(pageHTML []byte, location *time.Location) (res
 }
 
 // ExtractSlots ...
-func (e *Extractor) ExtractSlots(pageHTML []byte) ogame.Slots {
+func (e *Extractor) ExtractSlots(pageHTML []byte) (ogame.Slots, error) {
 	doc, _ := goquery.NewDocumentFromReader(bytes.NewReader(pageHTML))
 	return e.ExtractSlotsFromDoc(doc)
 }
@@ -287,13 +287,13 @@ func (e *Extractor) ExtractFleet1Ships(pageHTML []byte) ogame.ShipsInfos {
 }
 
 // ExtractEspionageReportMessageIDs ...
-func (e *Extractor) ExtractEspionageReportMessageIDs(pageHTML []byte) ([]ogame.EspionageReportSummary, int64) {
+func (e *Extractor) ExtractEspionageReportMessageIDs(pageHTML []byte) ([]ogame.EspionageReportSummary, int64, error) {
 	doc, _ := goquery.NewDocumentFromReader(bytes.NewReader(pageHTML))
 	return e.ExtractEspionageReportMessageIDsFromDoc(doc)
 }
 
 // ExtractCombatReportMessagesSummary ...
-func (e *Extractor) ExtractCombatReportMessagesSummary(pageHTML []byte) ([]ogame.CombatReportSummary, int64) {
+func (e *Extractor) ExtractCombatReportMessagesSummary(pageHTML []byte) ([]ogame.CombatReportSummary, int64, error) {
 	doc, _ := goquery.NewDocumentFromReader(bytes.NewReader(pageHTML))
 	return e.ExtractCombatReportMessagesFromDoc(doc)
 }
@@ -512,12 +512,12 @@ func (e *Extractor) ExtractFleetDispatchACSFromDoc(doc *goquery.Document) []ogam
 }
 
 // ExtractEspionageReportMessageIDsFromDoc ...
-func (e *Extractor) ExtractEspionageReportMessageIDsFromDoc(doc *goquery.Document) ([]ogame.EspionageReportSummary, int64) {
+func (e *Extractor) ExtractEspionageReportMessageIDsFromDoc(doc *goquery.Document) ([]ogame.EspionageReportSummary, int64, error) {
 	return extractEspionageReportMessageIDsFromDoc(doc)
 }
 
 // ExtractCombatReportMessagesFromDoc ...
-func (e *Extractor) ExtractCombatReportMessagesFromDoc(doc *goquery.Document) ([]ogame.CombatReportSummary, int64) {
+func (e *Extractor) ExtractCombatReportMessagesFromDoc(doc *goquery.Document) ([]ogame.CombatReportSummary, int64, error) {
 	return extractCombatReportMessagesFromDoc(doc)
 }
 
@@ -562,7 +562,7 @@ func (e *Extractor) extractFleetsFromDoc(doc *goquery.Document, location *time.L
 
 // ExtractSlotsFromDoc extract fleet slots from page "fleet1"
 // page "movement" redirect to "fleet1" when there is no fleet
-func (e *Extractor) ExtractSlotsFromDoc(doc *goquery.Document) ogame.Slots {
+func (e *Extractor) ExtractSlotsFromDoc(doc *goquery.Document) (ogame.Slots, error) {
 	return extractSlotsFromDoc(doc)
 }
 
@@ -911,5 +911,10 @@ func (e *Extractor) ExtractLfResearch(pageHTML []byte) (ogame.LfResearches, erro
 
 // ExtractLfResearchFromDoc ...
 func (e *Extractor) ExtractLfResearchFromDoc(doc *goquery.Document) (ogame.LfResearches, error) {
+	panic("not implemented")
+}
+
+// ExtractAvailableDiscoveries
+func (e *Extractor) ExtractAvailableDiscoveries(pageHTML []byte) int64 {
 	panic("not implemented")
 }

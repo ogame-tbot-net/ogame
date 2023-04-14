@@ -146,7 +146,8 @@ func ServerVersionHandler(c echo.Context) error {
 // ServerTimeHandler ...
 func ServerTimeHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
-	return c.JSON(http.StatusOK, SuccessResp(bot.ServerTime()))
+	serverTime, _ := bot.ServerTime()
+	return c.JSON(http.StatusOK, SuccessResp(serverTime))
 }
 
 // IsUnderAttackHandler ...
@@ -169,7 +170,8 @@ func IsVacationModeHandler(c echo.Context) error {
 // GetUserInfosHandler ...
 func GetUserInfosHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
-	return c.JSON(http.StatusOK, SuccessResp(bot.GetUserInfos()))
+	userInfo, _ := bot.GetUserInfos()
+	return c.JSON(http.StatusOK, SuccessResp(userInfo))
 }
 
 // GetCharacterClassHandler ...
@@ -216,7 +218,7 @@ func HasTechnocratHandler(c echo.Context) error {
 // GetEspionageReportMessagesHandler ...
 func GetEspionageReportMessagesHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
-	report, err := bot.GetEspionageReportMessages()
+	report, err := bot.GetEspionageReportMessages(-1)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorResp(500, err.Error()))
 	}
@@ -287,7 +289,7 @@ func GetFleetsHandler(c echo.Context) error {
 // GetSlotsHandler ...
 func GetSlotsHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
-	slots := bot.GetSlots()
+	slots, _ := bot.GetSlots()
 	return c.JSON(http.StatusOK, SuccessResp(slots))
 }
 
@@ -332,7 +334,8 @@ func GalaxyInfosHandler(c echo.Context) error {
 // GetResearchHandler ...
 func GetResearchHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
-	return c.JSON(http.StatusOK, SuccessResp(bot.GetResearch()))
+	researches, _ := bot.GetResearch()
+	return c.JSON(http.StatusOK, SuccessResp(researches))
 }
 
 // BuyOfferOfTheDayHandler ...
@@ -347,7 +350,8 @@ func BuyOfferOfTheDayHandler(c echo.Context) error {
 // GetMoonsHandler ...
 func GetMoonsHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
-	return c.JSON(http.StatusOK, SuccessResp(bot.GetMoons()))
+	moons, _ := bot.GetMoons()
+	return c.JSON(http.StatusOK, SuccessResp(moons))
 }
 
 // GetMoonHandler ...
@@ -389,7 +393,8 @@ func GetMoonByCoordHandler(c echo.Context) error {
 // GetPlanetsHandler ...
 func GetPlanetsHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
-	return c.JSON(http.StatusOK, SuccessResp(bot.GetPlanets()))
+	planets, _ := bot.GetPlanets()
+	return c.JSON(http.StatusOK, SuccessResp(planets))
 }
 
 // GetCelestialItemsHandler ...
@@ -875,7 +880,7 @@ func GetPriceHandler(c echo.Context) error {
 }
 
 // SendFleetHandler ...
-// curl 127.0.0.1:1234/bot/planets/123/send-fleet -d 'ships=203,1&ships=204,10&speed=10&galaxy=1&system=1&type=1&position=1&mission=3&metal=1&crystal=2&deuterium=3'
+// curl 127.0.0.1:1234/bot/planets/123/send-fleet -d 'galaxy=1&system=1&position=1'
 func SendFleetHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
 	planetID, err := utils.ParseI64(c.Param("planetID"))
@@ -999,6 +1004,53 @@ func SendFleetHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, SuccessResp(fleet))
 }
 
+// SendDiscoveryHandler ...
+// curl 127.0.0.1:1234/bot/planets/123/send-discovery -d 'galaxy=1&system=1&type=1&position=1'
+func SendDiscoveryHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+	planetID, err := utils.ParseI64(c.Param("planetID"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid planet id"))
+	}
+
+	if err := c.Request().ParseForm(); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid form"))
+	}
+
+	where := ogame.Coordinate{Type: ogame.PlanetType}
+	for key, values := range c.Request().PostForm {
+		switch key {
+		case "galaxy":
+			galaxy, err := utils.ParseI64(values[0])
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid galaxy"))
+			}
+			where.Galaxy = galaxy
+		case "system":
+			system, err := utils.ParseI64(values[0])
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid system"))
+			}
+			where.System = system
+		case "position":
+			position, err := utils.ParseI64(values[0])
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid position"))
+			}
+			where.Position = position
+		}
+	}
+
+	res, err := bot.SendDiscovery(ogame.CelestialID(planetID), where)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, err.Error()))
+	}
+	if res == false {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "failed to send discovery"))
+	}
+	return c.JSON(http.StatusOK, SuccessResp(res))
+}
+
 // GetAlliancePageContentHandler ...
 func GetAlliancePageContentHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
@@ -1031,7 +1083,7 @@ func GetStaticHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, ErrorResp(500, err.Error()))
 	}
 	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
-	resp, err := bot.client.Do(req)
+	resp, err := bot.device.GetClient().Do(req)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorResp(500, err.Error()))
 	}
@@ -1363,7 +1415,7 @@ func TechsHandler(c echo.Context) error {
 func GetCaptchaHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
 
-	_, err := GFLogin(bot.client, bot.ctx, bot.lobby, bot.Username, bot.password, bot.otpSecret, "")
+	_, err := GFLogin(bot.device, bot.ctx, bot.lobby, bot.Username, bot.password, bot.otpSecret, "")
 	var captchaErr *CaptchaRequiredError
 	if errors.As(err, &captchaErr) {
 		questionRaw, iconsRaw, err := StartCaptchaChallenge(bot.GetClient(), bot.ctx, captchaErr.ChallengeID)
@@ -1416,7 +1468,7 @@ type CaptchaChallenge struct {
 // GetCaptchaChallengeHandler ...
 func GetCaptchaChallengeHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
-	_, err := GFLogin(bot.client, bot.ctx, bot.lobby, bot.Username, bot.password, bot.otpSecret, "")
+	_, err := GFLogin(bot.device, bot.ctx, bot.lobby, bot.Username, bot.password, bot.otpSecret, "")
 	var captchaErr *CaptchaRequiredError
 	if errors.As(err, &captchaErr) {
 		questionRaw, iconsRaw, err := StartCaptchaChallenge(bot.GetClient(), bot.ctx, captchaErr.ChallengeID)
