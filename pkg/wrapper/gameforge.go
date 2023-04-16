@@ -663,7 +663,8 @@ func GetLoginLink(dev *device.Device, ctx context.Context, lobby string, userAcc
 	payload.Server.Number = userAccount.Server.Number
 	payload.ID = userAccount.ID
 	payload.ClickedButton = "account_list"
-	payload.Blackbox, _ = dev.GetBlackbox()
+	blackbox, _ := dev.GetBlackbox()
+	payload.Blackbox = "tra:" + blackbox
 	jsonPayloadBytes, err := json.Marshal(&payload)
 	if err != nil {
 		return "", err
