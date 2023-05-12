@@ -30,7 +30,6 @@ import (
 
 	"github.com/alaingilbert/ogame/pkg/device"
 
-	"github.com/alaingilbert/clockwork"
 	"github.com/alaingilbert/ogame/pkg/exponentialBackoff"
 	"github.com/alaingilbert/ogame/pkg/extractor"
 	v6 "github.com/alaingilbert/ogame/pkg/extractor/v6"
@@ -638,29 +637,29 @@ func (b *OGame) loginPart3(userAccount Account, page parser.OverviewPage) error 
 
 	_, _ = b.getPage(PreferencesPageName) // Will update preferences cached values
 
-	// Extract chat host and port
-	m := regexp.MustCompile(`var nodeUrl\s?=\s?"https:\\/\\/([^:]+):(\d+)\\/socket.io\\/socket.io.js"`).FindSubmatch(page.GetContent())
-	chatHost := string(m[1])
-	chatPort := string(m[2])
+	// // Extract chat host and port
+	// m := regexp.MustCompile(`var nodeUrl\s?=\s?"https:\\/\\/([^:]+):(\d+)\\/socket.io\\/socket.io.js"`).FindSubmatch(page.GetContent())
+	// chatHost := string(m[1])
+	// chatPort := string(m[2])
 
-	if atomic.CompareAndSwapInt32(&b.chatConnectedAtom, 0, 1) {
-		b.closeChatCh = make(chan struct{})
-		go func(b *OGame) {
-			defer atomic.StoreInt32(&b.chatConnectedAtom, 0)
-			chatRetry := exponentialBackoff.New(context.Background(), clockwork.NewRealClock(), 60)
-			chatRetry.LoopForever(func() bool {
-				select {
-				case <-b.closeChatCh:
-					return false
-				default:
-					b.connectChat(chatRetry, chatHost, chatPort)
-				}
-				return true
-			})
-		}(b)
-	} else {
-		b.ReconnectChat()
-	}
+	// if atomic.CompareAndSwapInt32(&b.chatConnectedAtom, 0, 1) {
+	// 	b.closeChatCh = make(chan struct{})
+	// 	go func(b *OGame) {
+	// 		defer atomic.StoreInt32(&b.chatConnectedAtom, 0)
+	// 		chatRetry := exponentialBackoff.New(context.Background(), clockwork.NewRealClock(), 60)
+	// 		chatRetry.LoopForever(func() bool {
+	// 			select {
+	// 			case <-b.closeChatCh:
+	// 				return false
+	// 			default:
+	// 				b.connectChat(chatRetry, chatHost, chatPort)
+	// 			}
+	// 			return true
+	// 		})
+	// 	}(b)
+	// } else {
+	// 	b.ReconnectChat()
+	// }
 
 	return nil
 }
@@ -1282,16 +1281,16 @@ func (b *OGame) ReconnectChat() bool {
 func (b *OGame) logout() {
 	_, _ = b.getPage(LogoutPageName)
 	_ = b.device.GetClient().Jar.(*cookiejar.Jar).Save()
-	if atomic.CompareAndSwapInt32(&b.isLoggedInAtom, 1, 0) {
-		select {
-		case <-b.closeChatCh:
-		default:
-			close(b.closeChatCh)
-			if b.ws != nil {
-				_ = b.ws.Close()
-			}
-		}
-	}
+	// if atomic.CompareAndSwapInt32(&b.isLoggedInAtom, 1, 0) {
+	// 	select {
+	// 	case <-b.closeChatCh:
+	// 	default:
+	// 		close(b.closeChatCh)
+	// 		if b.ws != nil {
+	// 			_ = b.ws.Close()
+	// 		}
+	// 	}
+	// }
 }
 
 // IsKnowFullPage ...
