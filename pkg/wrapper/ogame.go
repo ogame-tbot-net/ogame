@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	err2 "errors"
 	"fmt"
-	"github.com/alaingilbert/ogame/pkg/device"
 	"image"
 	"image/color"
 	"image/png"
@@ -29,7 +28,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/alaingilbert/clockwork"
+	"github.com/alaingilbert/ogame/pkg/device"
+
 	"github.com/alaingilbert/ogame/pkg/exponentialBackoff"
 	"github.com/alaingilbert/ogame/pkg/extractor"
 	v6 "github.com/alaingilbert/ogame/pkg/extractor/v6"
@@ -637,29 +637,29 @@ func (b *OGame) loginPart3(userAccount Account, page parser.OverviewPage) error 
 
 	_, _ = b.getPage(PreferencesPageName) // Will update preferences cached values
 
-	// Extract chat host and port
-	m := regexp.MustCompile(`var nodeUrl\s?=\s?"https:\\/\\/([^:]+):(\d+)\\/socket.io\\/socket.io.js"`).FindSubmatch(page.GetContent())
-	chatHost := string(m[1])
-	chatPort := string(m[2])
+	// // Extract chat host and port
+	// m := regexp.MustCompile(`var nodeUrl\s?=\s?"https:\\/\\/([^:]+):(\d+)\\/socket.io\\/socket.io.js"`).FindSubmatch(page.GetContent())
+	// chatHost := string(m[1])
+	// chatPort := string(m[2])
 
-	if atomic.CompareAndSwapInt32(&b.chatConnectedAtom, 0, 1) {
-		b.closeChatCh = make(chan struct{})
-		go func(b *OGame) {
-			defer atomic.StoreInt32(&b.chatConnectedAtom, 0)
-			chatRetry := exponentialBackoff.New(context.Background(), clockwork.NewRealClock(), 60)
-			chatRetry.LoopForever(func() bool {
-				select {
-				case <-b.closeChatCh:
-					return false
-				default:
-					b.connectChat(chatRetry, chatHost, chatPort)
-				}
-				return true
-			})
-		}(b)
-	} else {
-		b.ReconnectChat()
-	}
+	// if atomic.CompareAndSwapInt32(&b.chatConnectedAtom, 0, 1) {
+	// 	b.closeChatCh = make(chan struct{})
+	// 	go func(b *OGame) {
+	// 		defer atomic.StoreInt32(&b.chatConnectedAtom, 0)
+	// 		chatRetry := exponentialBackoff.New(context.Background(), clockwork.NewRealClock(), 60)
+	// 		chatRetry.LoopForever(func() bool {
+	// 			select {
+	// 			case <-b.closeChatCh:
+	// 				return false
+	// 			default:
+	// 				b.connectChat(chatRetry, chatHost, chatPort)
+	// 			}
+	// 			return true
+	// 		})
+	// 	}(b)
+	// } else {
+	// 	b.ReconnectChat()
+	// }
 
 	return nil
 }
@@ -1281,16 +1281,16 @@ func (b *OGame) ReconnectChat() bool {
 func (b *OGame) logout() {
 	_, _ = b.getPage(LogoutPageName)
 	_ = b.device.GetClient().Jar.(*cookiejar.Jar).Save()
-	if atomic.CompareAndSwapInt32(&b.isLoggedInAtom, 1, 0) {
-		select {
-		case <-b.closeChatCh:
-		default:
-			close(b.closeChatCh)
-			if b.ws != nil {
-				_ = b.ws.Close()
-			}
-		}
-	}
+	// if atomic.CompareAndSwapInt32(&b.isLoggedInAtom, 1, 0) {
+	// 	select {
+	// 	case <-b.closeChatCh:
+	// 	default:
+	// 		close(b.closeChatCh)
+	// 		if b.ws != nil {
+	// 			_ = b.ws.Close()
+	// 		}
+	// 	}
+	// }
 }
 
 // IsKnowFullPage ...
@@ -3682,6 +3682,67 @@ func (b *OGame) sendFleet(celestialID ogame.CelestialID, ships []ogame.Quantifia
 	return ogame.Fleet{}, errors.New("could not find new fleet ID")
 }
 
+func (b *OGame) sendDiscovery(celestialID ogame.CelestialID, where ogame.Coordinate) (bool, error) {
+
+	initialFleets, slots := b.getFleets()
+	if slots.InUse == slots.Total {
+		return false, ogame.ErrAllSlotsInUse
+	}
+	if initialFleets == nil {
+	}
+
+	pageHTML, err := b.getPage(GalaxyPageName, ChangePlanet(celestialID))
+	if err != nil {
+		return false, err
+	}
+
+	galaxyDoc, _ := goquery.NewDocumentFromReader(bytes.NewReader(pageHTML))
+	galaxyBodyID := b.extractor.ExtractBodyIDFromDoc(galaxyDoc)
+	if galaxyBodyID != GalaxyPageName {
+		now := time.Now().Unix()
+		b.error(ogame.ErrInvalidPlanetID.Error()+", planetID:", celestialID, ", ts: ", now)
+		return false, ogame.ErrInvalidPlanetID
+	}
+
+	if b.extractor.ExtractIsInVacationFromDoc(galaxyDoc) {
+		return false, ogame.ErrAccountInVacationMode
+	}
+
+	payload := url.Values{}
+
+	tokenM := regexp.MustCompile(`var fleetSendingToken = "([^"]+)";`).FindSubmatch(pageHTML)
+	if b.IsV8() || b.IsV9() {
+		tokenM = regexp.MustCompile(`var token = "([^"]+)";`).FindSubmatch(pageHTML)
+	}
+	if len(tokenM) != 2 {
+		return false, errors.New("token not found")
+	}
+
+	payload.Set("token", string(tokenM[1]))
+	payload.Set("galaxy", utils.FI64(where.Galaxy))
+	payload.Set("system", utils.FI64(where.System))
+	payload.Set("position", utils.FI64(where.Position))
+
+	res, _ := b.postPageContent(url.Values{"page": {"ingame"}, "component": {"fleetdispatch"}, "action": {"sendDiscoveryFleet"}, "ajax": {"1"}, "asJson": {"1"}}, payload)
+
+	var resStruct struct {
+		Response struct {
+			Success bool   `json:"success"`
+			Message string `json:"message"`
+		} `json:"response"`
+		Components   []any  `json:"components"`
+		NewAjaxToken string `json:"newAjaxToken"`
+	}
+	if err := json.Unmarshal(res, &resStruct); err != nil {
+		return false, errors.New("failed to unmarshal response: " + err.Error())
+	}
+	if resStruct.Response.Success {
+		return true, nil
+	}
+
+	return false, errors.New(resStruct.Response.Message)
+}
+
 func (b *OGame) getPageMessages(page int64, tabid ogame.MessagesTabID) ([]byte, error) {
 	payload := url.Values{
 		"messageId":  {"-1"},
@@ -4740,6 +4801,11 @@ func (b *OGame) GetTechs(celestialID ogame.CelestialID) (ogame.ResourcesBuilding
 func (b *OGame) SendFleet(celestialID ogame.CelestialID, ships []ogame.Quantifiable, speed ogame.Speed, where ogame.Coordinate,
 	mission ogame.MissionID, resources ogame.Resources, holdingTime, unionID int64) (ogame.Fleet, error) {
 	return b.WithPriority(taskRunner.Normal).SendFleet(celestialID, ships, speed, where, mission, resources, holdingTime, unionID)
+}
+
+// SendDiscovery sends a discovery fleet
+func (b *OGame) SendDiscovery(celestialID ogame.CelestialID, where ogame.Coordinate) (bool, error) {
+	return b.WithPriority(taskRunner.Normal).SendDiscovery(celestialID, where)
 }
 
 // EnsureFleet either sends all the requested ships or fail
