@@ -28,6 +28,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/alaingilbert/clockwork"
 	"github.com/alaingilbert/ogame/pkg/device"
 
 	"github.com/alaingilbert/ogame/pkg/exponentialBackoff"
@@ -637,29 +638,29 @@ func (b *OGame) loginPart3(userAccount Account, page parser.OverviewPage) error 
 
 	_, _ = b.getPage(PreferencesPageName) // Will update preferences cached values
 
-	// // Extract chat host and port
-	// m := regexp.MustCompile(`var nodeUrl\s?=\s?"https:\\/\\/([^:]+):(\d+)\\/socket.io\\/socket.io.js"`).FindSubmatch(page.GetContent())
-	// chatHost := string(m[1])
-	// chatPort := string(m[2])
+	// Extract chat host and port
+	m := regexp.MustCompile(`var nodeUrl\s?=\s?"https:\\/\\/([^:]+):(\d+)\\/socket.io\\/socket.io.js"`).FindSubmatch(page.GetContent())
+	chatHost := string(m[1])
+	chatPort := string(m[2])
 
-	// if atomic.CompareAndSwapInt32(&b.chatConnectedAtom, 0, 1) {
-	// 	b.closeChatCh = make(chan struct{})
-	// 	go func(b *OGame) {
-	// 		defer atomic.StoreInt32(&b.chatConnectedAtom, 0)
-	// 		chatRetry := exponentialBackoff.New(context.Background(), clockwork.NewRealClock(), 60)
-	// 		chatRetry.LoopForever(func() bool {
-	// 			select {
-	// 			case <-b.closeChatCh:
-	// 				return false
-	// 			default:
-	// 				b.connectChat(chatRetry, chatHost, chatPort)
-	// 			}
-	// 			return true
-	// 		})
-	// 	}(b)
-	// } else {
-	// 	b.ReconnectChat()
-	// }
+	if atomic.CompareAndSwapInt32(&b.chatConnectedAtom, 0, 1) {
+		b.closeChatCh = make(chan struct{})
+		go func(b *OGame) {
+			defer atomic.StoreInt32(&b.chatConnectedAtom, 0)
+			chatRetry := exponentialBackoff.New(context.Background(), clockwork.NewRealClock(), 60)
+			chatRetry.LoopForever(func() bool {
+				select {
+				case <-b.closeChatCh:
+					return false
+				default:
+					b.connectChat(chatRetry, chatHost, chatPort)
+				}
+				return true
+			})
+		}(b)
+	} else {
+		b.ReconnectChat()
+	}
 
 	return nil
 }
@@ -901,7 +902,7 @@ func (b *OGame) SetProxy(proxyAddress, username, password, proxyType string, log
 }
 
 func (b *OGame) connectChat(chatRetry *exponentialBackoff.ExponentialBackoff, host, port string) {
-	if b.IsV8() || b.IsV9() {
+	if b.IsV8() || b.IsV9() || b.IsV10() {
 		b.connectChatV8(chatRetry, host, port)
 	} else {
 		b.connectChatV7(chatRetry, host, port)
@@ -1281,16 +1282,16 @@ func (b *OGame) ReconnectChat() bool {
 func (b *OGame) logout() {
 	_, _ = b.getPage(LogoutPageName)
 	_ = b.device.GetClient().Jar.(*cookiejar.Jar).Save()
-	// if atomic.CompareAndSwapInt32(&b.isLoggedInAtom, 1, 0) {
-	// 	select {
-	// 	case <-b.closeChatCh:
-	// 	default:
-	// 		close(b.closeChatCh)
-	// 		if b.ws != nil {
-	// 			_ = b.ws.Close()
-	// 		}
-	// 	}
-	// }
+	if atomic.CompareAndSwapInt32(&b.isLoggedInAtom, 1, 0) {
+		select {
+		case <-b.closeChatCh:
+		default:
+			close(b.closeChatCh)
+			if b.ws != nil {
+				_ = b.ws.Close()
+			}
+		}
+	}
 }
 
 // IsKnowFullPage ...
@@ -3036,6 +3037,11 @@ func (b *OGame) IsV8() bool {
 // IsV9 ...
 func (b *OGame) IsV9() bool {
 	return len(b.ServerVersion()) > 0 && b.ServerVersion()[0] == '9'
+}
+
+// IsV10 ...
+func (b *OGame) IsV10() bool {
+	return len(b.ServerVersion()) > 0 && b.ServerVersion()[:2] == "10"
 }
 
 func (b *OGame) technologyDetails(celestialID ogame.CelestialID, id ogame.ID) (ogame.TechnologyDetails, error) {

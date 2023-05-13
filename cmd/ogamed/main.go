@@ -213,11 +213,6 @@ func main() {
 			Usage:   "Ninja API key",
 			Value:   "",
 			EnvVars: []string{"NJA_API_KEY"},
-		}, &cli.StringFlag{
-			Name:    "device-name",
-			Usage:   "Set the Device Name",
-			Value:   "device_name",
-			EnvVars: []string{"OGAMED_DEVICENAME"},
 		},
 		// cookies-filename DEPRECATED Only for compatibility TBot this parameter have to be removed soon!
 		&cli.StringFlag{
