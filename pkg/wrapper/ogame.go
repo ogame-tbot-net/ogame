@@ -3041,7 +3041,7 @@ func (b *OGame) IsV9() bool {
 
 // IsV10 ...
 func (b *OGame) IsV10() bool {
-	return len(b.ServerVersion()) > 0 && b.ServerVersion()[:2] == "10"
+	return len(b.ServerVersion()) > 1 && b.ServerVersion()[:2] == "10"
 }
 
 func (b *OGame) technologyDetails(celestialID ogame.CelestialID, id ogame.ID) (ogame.TechnologyDetails, error) {
