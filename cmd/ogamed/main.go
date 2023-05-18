@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/alaingilbert/ogame/pkg/device"
 	"github.com/alaingilbert/ogame/pkg/tlsclientconfig"
@@ -260,33 +261,35 @@ func start(c *cli.Context) error {
 	deviceTimezone := c.String("device-timezone")
 	deviceLang := c.String("device-lang")
 
+	deviceSystem = strings.ToLower(deviceSystem)
 	var deviceSystemParam device.Os
 	switch deviceSystem {
-	case "Android":
+	case "android":
 		deviceSystemParam = device.Android
-	case "Windows":
+	case "windows":
 		deviceSystemParam = device.Windows
-	case "MacOSX":
+	case "macosx":
 		deviceSystemParam = device.MacOSX
-	case "Linux":
+	case "linux":
 		deviceSystemParam = device.Linux
-	case "iOS":
-		deviceSystemParam = device.Linux
+	case "ios":
+		deviceSystemParam = device.Ios
 	default:
 		deviceSystemParam = device.Windows
 	}
 
+	deviceBrowser = strings.ToLower(deviceBrowser)
 	var deviceBrowserParam device.Browser
 	switch deviceBrowser {
-	case "Chrome":
+	case "chrome":
 		deviceBrowserParam = device.Chrome
-	case "Opera":
+	case "opera":
 		deviceBrowserParam = device.Opera
-	case "Safari":
+	case "safari":
 		deviceBrowserParam = device.Safari
-	case "Edge":
+	case "edge":
 		deviceBrowserParam = device.Edge
-	case "Firefox":
+	case "firefox":
 		deviceBrowserParam = device.Firefox
 	default:
 		deviceBrowserParam = device.Chrome
