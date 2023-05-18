@@ -262,6 +262,7 @@ func start(c *cli.Context) error {
 	deviceLang := c.String("device-lang")
 
 	deviceSystem = strings.ToLower(deviceSystem)
+	log.Printf("OS: %s", deviceSystem)
 	var deviceSystemParam device.Os
 	switch deviceSystem {
 	case "android":
@@ -277,6 +278,8 @@ func start(c *cli.Context) error {
 	default:
 		deviceSystemParam = device.Windows
 	}
+
+	log.Printf("From OS: %s", deviceSystemParam)
 
 	deviceBrowser = strings.ToLower(deviceBrowser)
 	var deviceBrowserParam device.Browser
