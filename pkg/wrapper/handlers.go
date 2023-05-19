@@ -1132,7 +1132,8 @@ func GetStaticHandler(c echo.Context) error {
 	}
 
 	if strings.Contains(c.Request().URL.String(), ".xml") {
-		body = replaceHostname(bot, body)
+		//body = replaceHostname(bot, body)
+		body = replaceHostnameWithRegxp(body, c.Request())
 		return c.Blob(http.StatusOK, "application/xml", body)
 	}
 
@@ -1156,7 +1157,8 @@ func GetFromGameHandler(c echo.Context) error {
 		vals = c.QueryParams()
 	}
 	pageHTML, _ := bot.GetPageContent(vals)
-	pageHTML = replaceHostname(bot, pageHTML)
+	//pageHTML = replaceHostname(bot, pageHTML)
+	pageHTML = replaceHostnameWithRegxp(pageHTML, c.Request())
 	pageHTML = removeCookiesBanner(pageHTML)
 	return c.HTMLBlob(http.StatusOK, pageHTML)
 }
@@ -1170,7 +1172,8 @@ func PostToGameHandler(c echo.Context) error {
 	}
 	payload, _ := c.FormParams()
 	pageHTML, _ := bot.PostPageContent(vals, payload)
-	pageHTML = replaceHostname(bot, pageHTML)
+	//pageHTML = replaceHostname(bot, pageHTML)
+	pageHTML = replaceHostnameWithRegxp(pageHTML, c.Request())
 	pageHTML = removeCookiesBanner(pageHTML)
 	return c.HTMLBlob(http.StatusOK, pageHTML)
 }
@@ -1531,6 +1534,22 @@ func GetPublicIPHandler(c echo.Context) error {
 func removeCookiesBanner(pageHTML []byte) []byte {
 	regex := `<script[^>]*id="cookiebanner"[^>]*>[\s\S]*?</script>`
 	re := regexp.MustCompile(regex)
-	pageHTML = []byte(re.ReplaceAllString(string(pageHTML), ""))
+	return re.ReplaceAll(pageHTML, []byte(""))
+}
+
+func replaceHostnameWithRegxp(pageHTML []byte, r *http.Request) []byte {
+	requestHostname := "http://" + r.Host
+	if r.TLS != nil {
+		requestHostname = "https://" + r.Host
+	}
+	regexes := []string{
+		//`https://s\d{1,3}-[a-z]{2}\.ogame\.gameforge\.com`,
+		`https://s\d+-[a-z]{2}\.ogame\.gameforge\.com`,
+		`https?:\\/\\/s\d+-[a-z]{2}\.ogame\.gameforge\.com`,
+		`https?:\\\\/\\\\/s\d+-[a-z]{2}\.ogame\.gameforge\.com`,
+	}
+	for _, regex := range regexes {
+		pageHTML = regexp.MustCompile(regex).ReplaceAll(pageHTML, []byte(requestHostname))
+	}
 	return pageHTML
 }
