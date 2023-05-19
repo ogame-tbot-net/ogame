@@ -114,6 +114,12 @@ func main() {
 			EnvVars: []string{"OGAMED_DEVICELANG"},
 		},
 		&cli.StringFlag{
+			Name:    "device-user-agent",
+			Usage:   "Set the Device User-Agent",
+			Value:   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+			EnvVars: []string{"OGAMED_DEVICEUSERAGENT"},
+		},
+		&cli.StringFlag{
 			Name:    "host",
 			Usage:   "HTTP host",
 			Value:   "127.0.0.1",
@@ -260,6 +266,7 @@ func start(c *cli.Context) error {
 	deviceHeight := c.Int("device-height")
 	deviceTimezone := c.String("device-timezone")
 	deviceLang := c.String("device-lang")
+	deviceUserAgent := c.String("device-user-agent")
 
 	deviceSystem = strings.ToLower(deviceSystem)
 	log.Printf("OS: %s", deviceSystem)
@@ -296,7 +303,6 @@ func start(c *cli.Context) error {
 		deviceBrowserParam = device.Firefox
 	default:
 		deviceBrowserParam = device.Chrome
-
 	}
 
 	// TODO: put device config in flags & env variables
@@ -310,6 +316,7 @@ func start(c *cli.Context) error {
 		SetScreenHeight(deviceHeight).
 		SetTimezone(deviceTimezone).
 		SetLanguages(deviceLang).
+		SetUserAgent(deviceUserAgent).
 		Build()
 	if err != nil {
 		panic(err)
