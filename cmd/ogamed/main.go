@@ -269,7 +269,6 @@ func start(c *cli.Context) error {
 	deviceUserAgent := c.String("device-user-agent")
 
 	deviceSystem = strings.ToLower(deviceSystem)
-	log.Printf("OS: %s", deviceSystem)
 	var deviceSystemParam device.Os
 	switch deviceSystem {
 	case "android":
@@ -285,8 +284,6 @@ func start(c *cli.Context) error {
 	default:
 		deviceSystemParam = device.Windows
 	}
-
-	log.Printf("From OS: %s", deviceSystemParam)
 
 	deviceBrowser = strings.ToLower(deviceBrowser)
 	var deviceBrowserParam device.Browser
@@ -488,9 +485,9 @@ func start(c *cli.Context) error {
 	e.HEAD("/api/*", wrapper.GetStaticHEADHandler) // AntiGame uses this to check if the cached XML files need to be refreshed
 
 	if enableTLS {
-		log.Println("Enable TLS Support")
+		log.Println("Enable TLS Support running encrypted HTTPS Server")
 		return e.StartTLS(host+":"+strconv.Itoa(port), tlsCertFile, tlsKeyFile)
 	}
-	log.Println("Disable TLS Support")
+	log.Println("Disable TLS Support running unencrypted HTTP Server")
 	return e.Start(host + ":" + strconv.Itoa(port))
 }
