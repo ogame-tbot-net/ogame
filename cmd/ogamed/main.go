@@ -2,14 +2,17 @@ package main
 
 import (
 	"crypto/subtle"
+	"log"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/alaingilbert/ogame/pkg/device"
+	"github.com/alaingilbert/ogame/pkg/tlsclientconfig"
 	"github.com/alaingilbert/ogame/pkg/wrapper"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"gopkg.in/urfave/cli.v2"
-	"log"
-	"os"
-	"strconv"
 )
 
 var version = "0.0.0"
@@ -49,108 +52,6 @@ func main() {
 			Value:   "en",
 			Aliases: []string{"l"},
 			EnvVars: []string{"OGAMED_LANGUAGE"},
-		},
-		&cli.StringFlag{
-			Name:    "host",
-			Usage:   "HTTP host",
-			Value:   "127.0.0.1",
-			EnvVars: []string{"OGAMED_HOST"},
-		},
-		&cli.IntFlag{
-			Name:    "port",
-			Usage:   "HTTP port",
-			Value:   8080,
-			EnvVars: []string{"OGAMED_PORT"},
-		},
-		&cli.BoolFlag{
-			Name:    "auto-login",
-			Usage:   "Login when process starts",
-			Value:   true,
-			EnvVars: []string{"OGAMED_AUTO_LOGIN"},
-		},
-		&cli.StringFlag{
-			Name:    "proxy",
-			Usage:   "Proxy address",
-			Value:   "",
-			EnvVars: []string{"OGAMED_PROXY"},
-		},
-		&cli.StringFlag{
-			Name:    "proxy-username",
-			Usage:   "Proxy username",
-			Value:   "",
-			EnvVars: []string{"OGAMED_PROXY_USERNAME"},
-		},
-		&cli.StringFlag{
-			Name:    "proxy-password",
-			Usage:   "Proxy password",
-			Value:   "",
-			EnvVars: []string{"OGAMED_PROXY_PASSWORD"},
-		},
-		&cli.StringFlag{
-			Name:    "proxy-type",
-			Usage:   "Proxy type (socks5/http)",
-			Value:   "socks5",
-			EnvVars: []string{"OGAMED_PROXY_TYPE"},
-		},
-		&cli.BoolFlag{
-			Name:    "proxy-login-only",
-			Usage:   "Proxy login requests only",
-			Value:   false,
-			EnvVars: []string{"OGAMED_PROXY_LOGIN_ONLY"},
-		},
-		&cli.StringFlag{
-			Name:    "lobby",
-			Usage:   "Lobby to use (lobby | lobby-pioneers)",
-			Value:   "lobby",
-			EnvVars: []string{"OGAMED_LOBBY"},
-		},
-		&cli.StringFlag{
-			Name:    "api-new-hostname",
-			Usage:   "New OGame Hostname eg: https://someuniverse.example.com",
-			Value:   "http://127.0.0.1:8080",
-			EnvVars: []string{"OGAMED_NEW_HOSTNAME"},
-		},
-		&cli.StringFlag{
-			Name:    "basic-auth-username",
-			Usage:   "Basic auth username eg: admin",
-			Value:   "",
-			EnvVars: []string{"OGAMED_AUTH_USERNAME"},
-		},
-		&cli.StringFlag{
-			Name:    "basic-auth-password",
-			Usage:   "Basic auth password eg: secret",
-			Value:   "",
-			EnvVars: []string{"OGAMED_AUTH_PASSWORD"},
-		},
-		&cli.StringFlag{
-			Name:    "enable-tls",
-			Usage:   "Enable TLS. Needs key.pem and cert.pem",
-			Value:   "false",
-			EnvVars: []string{"OGAMED_ENABLE_TLS"},
-		},
-		&cli.StringFlag{
-			Name:    "tls-key-file",
-			Usage:   "Path to key.pem",
-			Value:   "~/.ogame/key.pem",
-			EnvVars: []string{"OGAMED_TLS_CERTFILE"},
-		},
-		&cli.StringFlag{
-			Name:    "tls-cert-file",
-			Usage:   "Path to cert.pem",
-			Value:   "~/.ogame/cert.pem",
-			EnvVars: []string{"OGAMED_TLS_KEYFILE"},
-		},
-		&cli.BoolFlag{
-			Name:    "cors-enabled",
-			Usage:   "Enable CORS",
-			Value:   true,
-			EnvVars: []string{"CORS_ENABLED"},
-		},
-		&cli.StringFlag{
-			Name:    "nja-api-key",
-			Usage:   "Ninja API key",
-			Value:   "",
-			EnvVars: []string{"NJA_API_KEY"},
 		},
 		&cli.StringFlag{
 			Name:    "device-name",
@@ -212,6 +113,120 @@ func main() {
 			Value:   "en-US,en",
 			EnvVars: []string{"OGAMED_DEVICELANG"},
 		},
+		&cli.StringFlag{
+			Name:    "device-user-agent",
+			Usage:   "Set the Device User-Agent",
+			Value:   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+			EnvVars: []string{"OGAMED_DEVICEUSERAGENT"},
+		},
+		&cli.StringFlag{
+			Name:    "host",
+			Usage:   "HTTP host",
+			Value:   "127.0.0.1",
+			EnvVars: []string{"OGAMED_HOST"},
+		},
+		&cli.IntFlag{
+			Name:    "port",
+			Usage:   "HTTP port",
+			Value:   8080,
+			EnvVars: []string{"OGAMED_PORT"},
+		},
+		&cli.BoolFlag{
+			Name:    "auto-login",
+			Usage:   "Login when process starts",
+			Value:   true,
+			EnvVars: []string{"OGAMED_AUTO_LOGIN"},
+		},
+		&cli.StringFlag{
+			Name:    "proxy",
+			Usage:   "Proxy address",
+			Value:   "",
+			EnvVars: []string{"OGAMED_PROXY"},
+		},
+		&cli.StringFlag{
+			Name:    "proxy-username",
+			Usage:   "Proxy username",
+			Value:   "",
+			EnvVars: []string{"OGAMED_PROXY_USERNAME"},
+		},
+		&cli.StringFlag{
+			Name:    "proxy-password",
+			Usage:   "Proxy password",
+			Value:   "",
+			EnvVars: []string{"OGAMED_PROXY_PASSWORD"},
+		},
+		&cli.StringFlag{
+			Name:    "proxy-type",
+			Usage:   "Proxy type (socks5/http)",
+			Value:   "socks5",
+			EnvVars: []string{"OGAMED_PROXY_TYPE"},
+		},
+		&cli.BoolFlag{
+			Name:    "proxy-login-only",
+			Usage:   "Proxy login requests only",
+			Value:   false,
+			EnvVars: []string{"OGAMED_PROXY_LOGIN_ONLY"},
+		},
+		&cli.StringFlag{
+			Name:    "lobby",
+			Usage:   "Lobby to use (lobby | lobby-pioneers)",
+			Value:   "lobby",
+			EnvVars: []string{"OGAMED_LOBBY"},
+		},
+		&cli.StringFlag{
+			Name:    "api-new-hostname",
+			Usage:   "New OGame Hostname eg: https://someuniverse.example.com",
+			Value:   "",
+			EnvVars: []string{"OGAMED_NEW_HOSTNAME"},
+		},
+		&cli.StringFlag{
+			Name:    "basic-auth-username",
+			Usage:   "Basic auth username eg: admin",
+			Value:   "",
+			EnvVars: []string{"OGAMED_AUTH_USERNAME"},
+		},
+		&cli.StringFlag{
+			Name:    "basic-auth-password",
+			Usage:   "Basic auth password eg: secret",
+			Value:   "",
+			EnvVars: []string{"OGAMED_AUTH_PASSWORD"},
+		},
+		&cli.StringFlag{
+			Name:    "enable-tls",
+			Usage:   "Enable TLS. Needs key.pem and cert.pem",
+			Value:   "false",
+			EnvVars: []string{"OGAMED_ENABLE_TLS"},
+		},
+		&cli.StringFlag{
+			Name:    "tls-key-file",
+			Usage:   "Path to key.pem",
+			Value:   "~/.ogame/key.pem",
+			EnvVars: []string{"OGAMED_TLS_CERTFILE"},
+		},
+		&cli.StringFlag{
+			Name:    "tls-cert-file",
+			Usage:   "Path to cert.pem",
+			Value:   "~/.ogame/cert.pem",
+			EnvVars: []string{"OGAMED_TLS_KEYFILE"},
+		},
+		&cli.BoolFlag{
+			Name:    "cors-enabled",
+			Usage:   "Enable CORS",
+			Value:   true,
+			EnvVars: []string{"CORS_ENABLED"},
+		},
+		&cli.StringFlag{
+			Name:    "nja-api-key",
+			Usage:   "Ninja API key",
+			Value:   "",
+			EnvVars: []string{"NJA_API_KEY"},
+		},
+		// cookies-filename DEPRECATED Only for compatibility TBot this parameter have to be removed soon!
+		&cli.StringFlag{
+			Name:    "cookies-filename",
+			Usage:   "[DEPRECATED] Path to Cookie File",
+			EnvVars: []string{"OGAMED_COOKIEFILENAME"},
+		},
 	}
 	app.Action = start
 	if err := app.Run(os.Args); err != nil {
@@ -251,34 +266,37 @@ func start(c *cli.Context) error {
 	deviceHeight := c.Int("device-height")
 	deviceTimezone := c.String("device-timezone")
 	deviceLang := c.String("device-lang")
+	deviceUserAgent := c.String("device-user-agent")
 
+	deviceSystem = strings.ToLower(deviceSystem)
 	var deviceSystemParam device.Os
 	switch deviceSystem {
-	case "Android":
+	case "android":
 		deviceSystemParam = device.Android
-	case "Windows":
+	case "windows":
 		deviceSystemParam = device.Windows
-	case "MacOSX":
+	case "macosx":
 		deviceSystemParam = device.MacOSX
-	case "Linux":
+	case "linux":
 		deviceSystemParam = device.Linux
-	case "iOS":
-		deviceSystemParam = device.Linux
+	case "ios":
+		deviceSystemParam = device.Ios
 	default:
 		deviceSystemParam = device.Windows
 	}
 
+	deviceBrowser = strings.ToLower(deviceBrowser)
 	var deviceBrowserParam device.Browser
 	switch deviceBrowser {
-	case "Chrome":
+	case "chrome":
 		deviceBrowserParam = device.Chrome
-	case "Opera":
+	case "opera":
 		deviceBrowserParam = device.Opera
-	case "Safari":
+	case "safari":
 		deviceBrowserParam = device.Safari
-	case "Edge":
+	case "edge":
 		deviceBrowserParam = device.Edge
-	case "Firefox":
+	case "firefox":
 		deviceBrowserParam = device.Firefox
 	default:
 		deviceBrowserParam = device.Chrome
@@ -295,12 +313,13 @@ func start(c *cli.Context) error {
 		SetScreenHeight(deviceHeight).
 		SetTimezone(deviceTimezone).
 		SetLanguages(deviceLang).
+		SetUserAgent(deviceUserAgent).
 		Build()
 	if err != nil {
 		panic(err)
 	}
 
-	//tlsclientconfig.AddRoundTripper(deviceInst.GetClient().Transport)
+	tlsclientconfig.AddRoundTripper(deviceInst.GetClient().Transport)
 
 	params := wrapper.Params{
 		Device:         deviceInst,
@@ -410,6 +429,7 @@ func start(c *cli.Context) error {
 	e.GET("/bot/celestials/:celestialID/items", wrapper.GetCelestialItemsHandler)
 	e.GET("/bot/celestials/:celestialID/items/:itemRef/activate", wrapper.ActivateCelestialItemHandler)
 	e.GET("/bot/celestials/:celestialID/techs", wrapper.TechsHandler)
+	e.GET("/bot/celestials/:celestialID/abandon", wrapper.CelestialAbandonHandler)
 	e.GET("/bot/planets", wrapper.GetPlanetsHandler)
 	e.GET("/bot/planets/:planetID", wrapper.GetPlanetHandler)
 	e.GET("/bot/planets/:galaxy/:system/:position", wrapper.GetPlanetByCoordHandler)
@@ -436,6 +456,7 @@ func start(c *cli.Context) error {
 	e.POST("/bot/planets/:planetID/cancel-research", wrapper.CancelResearchHandler)
 	e.GET("/bot/planets/:planetID/resources", wrapper.GetResourcesHandler)
 	e.POST("/bot/planets/:planetID/send-fleet", wrapper.SendFleetHandler)
+	e.POST("/bot/planets/:planetID/send-discovery", wrapper.SendDiscoveryHandler)
 	e.POST("/bot/planets/:planetID/send-ipm", wrapper.SendIPMHandler)
 	e.GET("/bot/moons/:moonID/phalanx/:galaxy/:system/:position", wrapper.PhalanxHandler)
 	e.POST("/bot/moons/:moonID/jump-gate", wrapper.JumpGateHandler)
@@ -464,9 +485,9 @@ func start(c *cli.Context) error {
 	e.HEAD("/api/*", wrapper.GetStaticHEADHandler) // AntiGame uses this to check if the cached XML files need to be refreshed
 
 	if enableTLS {
-		log.Println("Enable TLS Support")
+		log.Println("Enable TLS Support running encrypted HTTPS Server")
 		return e.StartTLS(host+":"+strconv.Itoa(port), tlsCertFile, tlsKeyFile)
 	}
-	log.Println("Disable TLS Support")
+	log.Println("Disable TLS Support running unencrypted HTTP Server")
 	return e.Start(host + ":" + strconv.Itoa(port))
 }
