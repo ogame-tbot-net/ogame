@@ -28,6 +28,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/alaingilbert/ogame/pkg/device"
+
 	"github.com/alaingilbert/clockwork"
 	"github.com/alaingilbert/ogame/pkg/device"
 
@@ -3717,6 +3719,7 @@ func (b *OGame) sendDiscovery(celestialID ogame.CelestialID, where ogame.Coordin
 	payload := url.Values{}
 
 	tokenM := regexp.MustCompile(`var fleetSendingToken = "([^"]+)";`).FindSubmatch(pageHTML)
+
 	if b.IsV8() || b.IsV9() || b.IsV10() {
 		tokenM = regexp.MustCompile(`var token = "([^"]+)";`).FindSubmatch(pageHTML)
 	}

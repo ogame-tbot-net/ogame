@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+
 	"github.com/alaingilbert/ogame/pkg/device"
 	"github.com/alaingilbert/ogame/pkg/tlsclientconfig"
 	"github.com/alaingilbert/ogame/pkg/wrapper"
@@ -302,6 +303,50 @@ func start(c *cli.Context) error {
 		deviceBrowserParam = device.Chrome
 	}
 
+	deviceName := c.String("device-name")
+	deviceSystem := c.String("device-system")
+	deviceBrowser := c.String("device-browser")
+	deviceMemory := c.Int("device-memory")
+	deviceConcurrency := c.Int("device-concurrency")
+	deviceColor := c.Int("device-color")
+	deviceWidth := c.Int("device-width")
+	deviceHeight := c.Int("device-height")
+	deviceTimezone := c.String("device-timezone")
+	deviceLang := c.String("device-lang")
+
+	var deviceSystemParam device.Os
+	switch deviceSystem {
+	case "Android":
+		deviceSystemParam = device.Android
+	case "Windows":
+		deviceSystemParam = device.Windows
+	case "MacOSX":
+		deviceSystemParam = device.MacOSX
+	case "Linux":
+		deviceSystemParam = device.Linux
+	case "iOS":
+		deviceSystemParam = device.Linux
+	default:
+		deviceSystemParam = device.Windows
+	}
+
+	var deviceBrowserParam device.Browser
+	switch deviceBrowser {
+	case "Chrome":
+		deviceBrowserParam = device.Chrome
+	case "Opera":
+		deviceBrowserParam = device.Opera
+	case "Safari":
+		deviceBrowserParam = device.Safari
+	case "Edge":
+		deviceBrowserParam = device.Edge
+	case "Firefox":
+		deviceBrowserParam = device.Firefox
+	default:
+		deviceBrowserParam = device.Chrome
+
+	}
+
 	// TODO: put device config in flags & env variables
 	deviceInst, err := device.NewBuilder(deviceName).
 		SetOsName(deviceSystemParam).
@@ -314,6 +359,7 @@ func start(c *cli.Context) error {
 		SetTimezone(deviceTimezone).
 		SetLanguages(deviceLang).
 		SetUserAgent(deviceUserAgent).
+
 		Build()
 	if err != nil {
 		panic(err)
