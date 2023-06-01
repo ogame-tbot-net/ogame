@@ -876,6 +876,7 @@ func getSocks5Transport(proxyAddress, username, password string) (*http.Transpor
 }
 
 func (b *OGame) setProxy(proxyAddress, username, password, proxyType string, loginOnly bool, config *tls.Config) error {
+
 	if proxyType == "" {
 		proxyType = "socks5"
 	}
@@ -929,7 +930,12 @@ func (b *OGame) connectChatV8(chatRetry *exponentialBackoff.ExponentialBackoff, 
 		b.error("failed to create request:", err)
 		return
 	}
-	client := &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{
+		Transport: tr,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		b.error("failed to get socket.io token:", err)
@@ -947,7 +953,11 @@ func (b *OGame) connectChatV8(chatRetry *exponentialBackoff.ExponentialBackoff, 
 
 	origin := "https://" + host + ":" + port + "/"
 	wssURL := "wss://" + host + ":" + port + "/socket.io/?EIO=4&transport=websocket&sid=" + sid
-	b.ws, err = websocket.Dial(wssURL, "", origin)
+
+	wsConfig, _ := websocket.NewConfig(wssURL, origin)
+	wsConfig.TlsConfig = &tls.Config{InsecureSkipVerify: true}
+	b.ws, err = websocket.DialConfig(wsConfig)
+	//b.ws, err = websocket.Dial(wssURL, "", origin)
 	if err != nil {
 		b.error("failed to dial websocket:", err)
 		return

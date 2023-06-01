@@ -2,10 +2,11 @@ package wrapper
 
 import (
 	"crypto/tls"
-	"github.com/alaingilbert/ogame/pkg/device"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/alaingilbert/ogame/pkg/device"
 
 	"github.com/alaingilbert/ogame/pkg/extractor"
 	"github.com/alaingilbert/ogame/pkg/httpclient"
@@ -201,6 +202,7 @@ type Wrapper interface {
 	IsPioneers() bool
 	IsV7() bool
 	IsV9() bool
+	IsV10() bool
 	IsVacationModeEnabled() bool
 	Location() *time.Location
 	OnStateChange(clb func(locked bool, actor string))
