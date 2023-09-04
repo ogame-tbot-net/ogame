@@ -28,11 +28,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/alaingilbert/clockwork"
 	"github.com/alaingilbert/ogame/pkg/device"
+
+	"github.com/alaingilbert/clockwork"
 
 	"github.com/alaingilbert/ogame/pkg/exponentialBackoff"
 	"github.com/alaingilbert/ogame/pkg/extractor"
+	v10 "github.com/alaingilbert/ogame/pkg/extractor/v10"
 	v6 "github.com/alaingilbert/ogame/pkg/extractor/v6"
 	v7 "github.com/alaingilbert/ogame/pkg/extractor/v7"
 	v71 "github.com/alaingilbert/ogame/pkg/extractor/v71"
@@ -600,9 +602,11 @@ func (b *OGame) loginPart2(server Server) error {
 }
 
 func (b *OGame) loginPart3(userAccount Account, page parser.OverviewPage) error {
-	var ext extractor.Extractor = v9.NewExtractor()
+	var ext extractor.Extractor = v10.NewExtractor()
 	if ogVersion, err := version.NewVersion(b.serverData.Version); err == nil {
-		if ogVersion.GreaterThanOrEqual(version.Must(version.NewVersion("9.0.0"))) {
+		if ogVersion.GreaterThanOrEqual(version.Must(version.NewVersion("10.0.0"))) {
+			ext = v10.NewExtractor()
+		} else if ogVersion.GreaterThanOrEqual(version.Must(version.NewVersion("9.0.0"))) {
 			ext = v9.NewExtractor()
 		} else if ogVersion.GreaterThanOrEqual(version.Must(version.NewVersion("8.7.4-pl3"))) {
 			ext = v874.NewExtractor()
@@ -1375,6 +1379,14 @@ func canParseSystemInfos(by []byte) bool {
 	return err == nil
 }
 
+func canParseNewSystemInfos(by []byte) bool {
+	var success struct {
+		Success bool
+	}
+	err := json.Unmarshal(by, &success)
+	return err == nil
+}
+
 func (b *OGame) preRequestChecks() error {
 	if !b.IsEnabled() {
 		return ogame.ErrBotInactive
@@ -1461,7 +1473,8 @@ func detectLoggedOut(method, page string, vals url.Values, pageHTML []byte) bool
 			(page == FetchEventboxAjaxPageName && !canParseEventBox(pageHTML))
 
 	case http.MethodPost:
-		return page == GalaxyContentAjaxPageName && !canParseSystemInfos(pageHTML)
+		return (page == GalaxyContentAjaxPageName && !canParseSystemInfos(pageHTML)) ||
+			(page == GalaxyAjaxPageName && !canParseNewSystemInfos(pageHTML))
 	}
 	return false
 }
@@ -2896,7 +2909,12 @@ func (b *OGame) galaxyInfos(galaxy, system int64, opts ...Option) (ogame.SystemI
 		"galaxy": {utils.FI64(galaxy)},
 		"system": {utils.FI64(system)},
 	}
-	vals := url.Values{"page": {"ingame"}, "component": {"galaxyContent"}, "ajax": {"1"}}
+	var vals url.Values
+	if b.IsV10() {
+		vals = url.Values{"page": {"ingame"}, "component": {"galaxy"}, "action": {"fetchGalaxyContent"}, "ajax": {"1"}, "asJson": {"1"}}
+	} else {
+		vals = url.Values{"page": {"ingame"}, "component": {"galaxyContent"}, "ajax": {"1"}}
+	}
 	pageHTML, err := b.postPageContent(vals, payload, opts...)
 	if err != nil {
 		return res, err
