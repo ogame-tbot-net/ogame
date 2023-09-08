@@ -125,6 +125,13 @@ func (b *Prioritize) IsUnderAttack() (bool, error) {
 	return b.bot.isUnderAttack()
 }
 
+// IsUnderAttack returns true if the user is under attack, false otherwise
+func (b *Prioritize) IsUnderAttackByID(CelestialID ogame.CelestialID) (bool, error) {
+	b.begin("IsUnderAttackByID")
+	defer b.done()
+	return b.bot.isUnderAttackByID(CelestialID)
+}
+
 // SetVacationMode puts account in vacation mode
 func (b *Prioritize) SetVacationMode() error {
 	b.begin("SetVacationMode")
@@ -140,7 +147,7 @@ func (b *Prioritize) SetPreferences(p ogame.Preferences) error {
 }
 
 // GetPlanets returns the user planets
-func (b *Prioritize) GetPlanets() []Planet {
+func (b *Prioritize) GetPlanets() ([]Planet, error) {
 	b.begin("GetPlanets")
 	defer b.done()
 	return b.bot.getPlanets()
@@ -155,7 +162,7 @@ func (b *Prioritize) GetPlanet(v any) (Planet, error) {
 }
 
 // GetMoons returns the user moons
-func (b *Prioritize) GetMoons() []Moon {
+func (b *Prioritize) GetMoons() ([]Moon, error) {
 	b.begin("GetMoons")
 	defer b.done()
 	return b.bot.getMoons()
@@ -200,14 +207,14 @@ func (b *Prioritize) GetCelestial(v any) (Celestial, error) {
 
 // ServerTime returns server time
 // Timezone is OGT (OGame Time zone)
-func (b *Prioritize) ServerTime() time.Time {
+func (b *Prioritize) ServerTime() (time.Time, error) {
 	b.begin("ServerTime")
 	defer b.done()
 	return b.bot.serverTime()
 }
 
 // GetUserInfos gets the user information
-func (b *Prioritize) GetUserInfos() ogame.UserInfos {
+func (b *Prioritize) GetUserInfos() (ogame.UserInfos, error) {
 	b.begin("GetUserInfos")
 	defer b.done()
 	return b.bot.getUserInfos()
@@ -321,14 +328,14 @@ func (b *Prioritize) GetCachedResearch() ogame.Researches {
 }
 
 // GetResearch gets the player researches information
-func (b *Prioritize) GetResearch() ogame.Researches {
+func (b *Prioritize) GetResearch() (ogame.Researches, error) {
 	b.begin("GetResearch")
 	defer b.done()
 	return b.bot.getResearch()
 }
 
 // GetSlots gets the player current and total slots information
-func (b *Prioritize) GetSlots() ogame.Slots {
+func (b *Prioritize) GetSlots() (ogame.Slots, error) {
 	b.begin("GetSlots")
 	defer b.done()
 	return b.bot.getSlots()
@@ -582,7 +589,8 @@ func (b *Prioritize) FlightTime(origin, destination ogame.Coordinate, speed ogam
 // Phalanx scan a coordinate from a moon to get fleets information
 // IMPORTANT: My account was instantly banned when I scanned an invalid coordinate.
 // IMPORTANT: This function DOES validate that the coordinate is a valid planet in range of phalanx
-// 			  and that you have enough deuterium.
+//
+//	and that you have enough deuterium.
 func (b *Prioritize) Phalanx(moonID ogame.MoonID, coord ogame.Coordinate) ([]ogame.Fleet, error) {
 	b.begin("Phalanx")
 	defer b.done()
@@ -741,4 +749,24 @@ func (b *Prioritize) GetLfResearch(celestialID ogame.CelestialID, options ...Opt
 	b.begin("GetLfResearch")
 	defer b.done()
 	return b.bot.getLfResearch(celestialID, options...)
+}
+
+// SendDiscoveryFleet ...
+func (b *Prioritize) SendDiscoveryFleet(celestialID ogame.CelestialID, coord ogame.Coordinate) error {
+	b.begin("SendDiscoveryFleet")
+	defer b.done()
+	return b.bot.sendDiscoveryFleet(celestialID, coord)
+}
+
+// GetAvailableDiscoveries ...
+func (b *Prioritize) GetAvailableDiscoveries() int64 {
+	b.begin("GetAvailableDiscoveries")
+	defer b.done()
+	return b.bot.getAvailableDiscoveries()
+}
+
+func (b *Prioritize) GetPositionsAvailableForDiscoveryFleet(galaxy int64, system int64) ([]int64, error) {
+	b.begin("GetPositionsAvailableForDiscoveryFleet")
+	defer b.done()
+	return b.bot.getPositionsAvailableForDiscoveryFleet(galaxy, system)
 }

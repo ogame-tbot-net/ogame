@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/PuerkitoBio/goquery"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -12,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 // ParseInt ...
@@ -150,6 +151,23 @@ func InArray[T Equalable[T]](needle T, haystack []T) bool {
 	return false
 }
 
+func InArr[T comparable](needle T, haystack []T) bool {
+	for _, el := range haystack {
+		if needle == el {
+			return true
+		}
+	}
+	return false
+}
+
+// RandChoice returns a random element from an array
+func RandChoice[T any](arr []T) T {
+	if len(arr) == 0 {
+		panic("empty array")
+	}
+	return arr[rand.Intn(len(arr))]
+}
+
 // Random generates a number between min and max inclusively
 func Random(min, max int64) int64 {
 	if min == max {
@@ -174,4 +192,32 @@ func randDur(min, max int64, dur time.Duration) time.Duration {
 // RandMs generates random duration in milliseconds
 func RandMs(min, max int64) time.Duration {
 	return randDur(min, max, time.Millisecond)
+}
+
+func RandFloat(min, max float64) float64 {
+	if min == max {
+		return min
+	}
+	if max < min {
+		min, max = max, min
+	}
+	return rand.Float64()*(max-min) + min
+}
+
+func AbsInt64(x int64) int64 {
+	return AbsDiffInt64(x, 0)
+}
+
+func AbsDiffInt64(x, y int64) int64 {
+	if x < y {
+		return y - x
+	}
+	return x - y
+}
+
+func AbsDiffUint64(x, y uint64) uint64 {
+	if x < y {
+		return y - x
+	}
+	return x - y
 }

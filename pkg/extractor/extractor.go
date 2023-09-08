@@ -94,11 +94,11 @@ type OverviewExtractorBytesDoc interface {
 }
 
 type FleetsExtractorBytes interface {
-	ExtractSlots(pageHTML []byte) ogame.Slots
+	ExtractSlots(pageHTML []byte) (ogame.Slots, error)
 }
 
 type FleetsExtractorDoc interface {
-	ExtractSlotsFromDoc(doc *goquery.Document) ogame.Slots
+	ExtractSlotsFromDoc(doc *goquery.Document) (ogame.Slots, error)
 }
 
 type MovementExtractorBytes interface {
@@ -335,6 +335,11 @@ type FederationExtractorBytes interface {
 	ExtractFederation(pageHTML []byte) url.Values
 }
 
+// GalaxyPageExtractorBytes galaxy page
+type GalaxyPageExtractorBytes interface {
+	ExtractAvailableDiscoveries(pageHTML []byte) int64
+}
+
 // GalaxyExtractorBytes ajax page containing galaxy information in galaxy page
 type GalaxyExtractorBytes interface {
 	ExtractGalaxyInfos(pageHTML []byte, botPlayerName string, botPlayerID, botPlayerRank int64) (ogame.SystemInfos, error)
@@ -515,6 +520,7 @@ type Extractor interface {
 	FetchResourcesExtractorBytes
 	FetchTechsExtractorBytes
 	GalaxyExtractorBytes
+	GalaxyPageExtractorBytes
 	JumpGateLayerExtractorBytes
 	MessagesMarketplaceExtractorBytes
 	PhalanxExtractorBytes

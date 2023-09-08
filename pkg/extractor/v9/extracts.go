@@ -198,10 +198,12 @@ func extractEmpire(pageHTML []byte) ([]ogame.EmpireCelestial, error) {
 
 func extractOverviewProductionFromDoc(doc *goquery.Document, lifeformEnabled bool) ([]ogame.Quantifiable, error) {
 	res := make([]ogame.Quantifiable, 0)
-	active := doc.Find("table.construction").Eq(2)
-	if lifeformEnabled {
-		active = doc.Find("table.construction").Eq(4)
-	}
+
+	active := doc.Find("div#productionboxshipyardcomponent table.construction")
+	//active := doc.Find("table.construction").Eq(2)
+	// if lifeformEnabled {
+	// 	active = doc.Find("table.construction").Eq(4)
+	// }
 	href, _ := active.Find("td a").Attr("href")
 	m := regexp.MustCompile(`openTech=(\d+)`).FindStringSubmatch(href)
 	if len(m) == 0 {
@@ -754,4 +756,15 @@ func extractTearDownButtonEnabledFromDoc(doc *goquery.Document) (out bool) {
 		}
 	}
 	return
+}
+
+func extractAvailableDiscoveriesFromDoc(doc *goquery.Document) int64 {
+	discoveryCount := doc.Find("div#galaxyHeaderDiscoveryCount").Text()
+	rgxTotal := regexp.MustCompile(`/([0-9]*)`)
+	rgxUsed := regexp.MustCompile(`([0-9]*)/`)
+	totalString := rgxTotal.FindStringSubmatch(discoveryCount)[1]
+	usedString := rgxUsed.FindStringSubmatch(discoveryCount)[1]
+	total, _ := strconv.ParseInt(totalString, 10, 64)
+	used, _ := strconv.ParseInt(usedString, 10, 64)
+	return total - used
 }

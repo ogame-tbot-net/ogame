@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"net/url"
 	"regexp"
@@ -34,16 +35,20 @@ func extractTearDownButtonEnabledFromDoc(doc *goquery.Document) bool {
 }
 
 func extractIsInVacationFromDoc(doc *goquery.Document) bool {
-	href := doc.Find("div#advice-bar a").AttrOr("href", "")
-	if href == "" {
-		return false
-	}
-	u, _ := url.Parse(href)
-	q := u.Query()
-	if q.Get("page") == "preferences" && q.Get("selectedTab") == "3" && q.Get("openGroup") == "0" {
-		return true
-	}
-	return false
+	var isVacation bool
+	doc.Find("div#advice-bar a").Each(func(i int, s *goquery.Selection) {
+		href := s.AttrOr("href", "")
+		if href == "" {
+			return
+		}
+		u, _ := url.Parse(href)
+		q := u.Query()
+		if q.Get("page") == "preferences" && q.Get("selectedTab") == "3" && q.Get("openGroup") == "0" {
+			isVacation = true
+			return
+		}
+	})
+	return isVacation
 }
 
 func extractResourcesFromDoc(doc *goquery.Document) ogame.Resources {
@@ -1204,7 +1209,7 @@ func extractFleetsFromDoc(doc *goquery.Document, location *time.Location, lifefo
 	return
 }
 
-func extractSlotsFromDoc(doc *goquery.Document) ogame.Slots {
+func extractSlotsFromDoc(doc *goquery.Document) (ogame.Slots, error) {
 	slots := ogame.Slots{}
 	page := ExtractBodyIDFromDoc(doc)
 	if page == "movement" {
@@ -1226,8 +1231,10 @@ func extractSlotsFromDoc(doc *goquery.Document) ogame.Slots {
 			slots.ExpInUse = utils.DoParseI64(m[1])
 			slots.ExpTotal = utils.DoParseI64(m[2])
 		}
+	} else {
+		return slots, fmt.Errorf("invalid page %s for slots", page)
 	}
-	return slots
+	return slots, nil
 }
 
 func extractServerTimeFromDoc(doc *goquery.Document) (time.Time, error) {
@@ -1704,8 +1711,8 @@ func extractGalaxyInfos(pageHTML []byte, botPlayerName string, botPlayerID, botP
 	}
 
 	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(tmp.Galaxy))
-	res.Tmpgalaxy = utils.ParseInt(doc.Find("table").AttrOr("data-galaxy", "0"))
-	res.Tmpsystem = utils.ParseInt(doc.Find("table").AttrOr("data-system", "0"))
+	res.SetGalaxy(utils.ParseInt(doc.Find("table").AttrOr("data-galaxy", "0")))
+	res.SetSystem(utils.ParseInt(doc.Find("table").AttrOr("data-system", "0")))
 	isVacationMode := doc.Find("div#warning").Length() == 1
 	if isVacationMode {
 		return res, ogame.ErrAccountInVacationMode
@@ -1804,7 +1811,7 @@ func extractGalaxyInfos(pageHTML []byte, botPlayerName string, botPlayerID, botP
 			planetInfos.Player.Name = playerName
 			planetInfos.Player.Rank = playerRank
 
-			res.Tmpplanets[i] = planetInfos
+			res.SetPlanet(i, planetInfos)
 		}
 	})
 
