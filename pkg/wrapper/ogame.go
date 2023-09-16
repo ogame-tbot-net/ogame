@@ -35,6 +35,7 @@ import (
 	"github.com/alaingilbert/ogame/pkg/exponentialBackoff"
 	"github.com/alaingilbert/ogame/pkg/extractor"
 	v10 "github.com/alaingilbert/ogame/pkg/extractor/v10"
+	v104 "github.com/alaingilbert/ogame/pkg/extractor/v104"
 	v6 "github.com/alaingilbert/ogame/pkg/extractor/v6"
 	v7 "github.com/alaingilbert/ogame/pkg/extractor/v7"
 	v71 "github.com/alaingilbert/ogame/pkg/extractor/v71"
@@ -602,9 +603,11 @@ func (b *OGame) loginPart2(server Server) error {
 }
 
 func (b *OGame) loginPart3(userAccount Account, page parser.OverviewPage) error {
-	var ext extractor.Extractor = v10.NewExtractor()
+	var ext extractor.Extractor = v104.NewExtractor()
 	if ogVersion, err := version.NewVersion(b.serverData.Version); err == nil {
-		if ogVersion.GreaterThanOrEqual(version.Must(version.NewVersion("10.0.0"))) {
+		if ogVersion.GreaterThanOrEqual(version.Must(version.NewVersion("10.4.0-beta2"))) {
+			ext = v104.NewExtractor()
+		} else if ogVersion.GreaterThanOrEqual(version.Must(version.NewVersion("10.0.0"))) {
 			ext = v10.NewExtractor()
 		} else if ogVersion.GreaterThanOrEqual(version.Must(version.NewVersion("9.0.0"))) {
 			ext = v9.NewExtractor()
@@ -3100,6 +3103,11 @@ func (b *OGame) IsV10() bool {
 	return len(b.ServerVersion()) > 1 && b.ServerVersion()[:2] == "10"
 }
 
+// IsV104 ...
+func (b *OGame) IsV104() bool {
+	return len(b.ServerVersion()) > 3 && b.ServerVersion()[:4] == "10.4"
+}
+
 func (b *OGame) technologyDetails(celestialID ogame.CelestialID, id ogame.ID) (ogame.TechnologyDetails, error) {
 	pageHTML, _ := b.getPageContent(url.Values{
 		"page":       {"ingame"},
@@ -3175,43 +3183,69 @@ func (b *OGame) build(celestialID ogame.CelestialID, id ogame.ID, nbr int64) err
 	} else {
 		return errors.New("invalid id " + id.String())
 	}
-	vals := url.Values{
-		"page":      {"ingame"},
-		"component": {page},
-		"modus":     {"1"},
-		"type":      {utils.FI64(id)},
-		"cp":        {utils.FI64(celestialID)},
-	}
 
 	token, err := getToken(b, page, celestialID)
 	if err != nil {
 		return err
 	}
-	vals.Add("token", token)
 
-	if id.IsDefense() || id.IsShip() {
-		var maximumNbr int64 = 99999
-		var err error
-		var token string
-		for nbr > 0 {
-			tmp := int64(math.Min(float64(nbr), float64(maximumNbr)))
-			vals.Set("menge", utils.FI64(tmp))
-			_, err = b.getPageContent(vals)
-			if err != nil {
-				break
-			}
-			token, err = getToken(b, page, celestialID)
-			if err != nil {
-				break
-			}
-			vals.Set("token", token)
-			nbr -= maximumNbr
+	if b.IsV104() {
+		vals := url.Values{
+			"page":      {"componentOnly"},
+			"component": {"buildlistactions"},
+			"action":    {"scheduleEntry"},
+			"asJson":    {"1"},
 		}
+
+		var amount int64 = 1
+		if id.IsShip() || id.IsDefense() {
+			var maximumNbr int64 = 99999
+			amount = int64(math.Min(float64(nbr), float64(maximumNbr)))
+		}
+
+		payload := url.Values{
+			"technologyId": {utils.FI64(id)},
+			"amount":       {utils.FI64(amount)},
+			"mode":         {"1"},
+			"token":        {token},
+			"planetId":     {utils.FI64(celestialID)},
+		}
+
+		_, err = b.postPageContent(vals, payload)
+		return err
+	} else {
+		vals := url.Values{
+			"page":      {"ingame"},
+			"component": {page},
+			"modus":     {"1"},
+			"type":      {utils.FI64(id)},
+			"cp":        {utils.FI64(celestialID)},
+			"token":     {token},
+		}
+		if id.IsDefense() || id.IsShip() {
+			var maximumNbr int64 = 99999
+			var err error
+			var token string
+			for nbr > 0 {
+				tmp := int64(math.Min(float64(nbr), float64(maximumNbr)))
+				vals.Set("menge", utils.FI64(tmp))
+				_, err = b.getPageContent(vals)
+				if err != nil {
+					break
+				}
+				token, err = getToken(b, page, celestialID)
+				if err != nil {
+					break
+				}
+				vals.Set("token", token)
+				nbr -= maximumNbr
+			}
+			return err
+		}
+
+		_, err = b.getPageContent(vals)
 		return err
 	}
-
-	_, err = b.getPageContent(vals)
-	return err
 }
 
 func (b *OGame) buildCancelable(celestialID ogame.CelestialID, id ogame.ID) error {
