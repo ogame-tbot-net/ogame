@@ -1013,7 +1013,7 @@ func ParseBlackbox(decrypted string) (*JsFingerprint, error) {
 		return nil, errors.New("failed to parse ConstantVersion")
 	}
 	fingerprint.ConstantVersion = int(constantVersion)
-	fingerprint.UserAgent, ok = arr[31].(string)
+	fingerprint.UserAgent, ok = arr[29].(string)
 	if !ok {
 		return nil, errors.New("failed to parse UserAgent")
 	}
@@ -1033,11 +1033,11 @@ func ParseBlackbox(decrypted string) (*JsFingerprint, error) {
 	if !ok {
 		return nil, errors.New("failed to parse WebglInfo")
 	}
-	fingerprint.XVecB64, ok = arr[30].(string)
+	fingerprint.XVecB64, ok = arr[28].(string)
 	if !ok {
 		return nil, errors.New("failed to parse XVecB64")
 	}
-	fingerprint.XGame, ok = arr[27].(string)
+	fingerprint.XGame, ok = arr[25].(string)
 	if !ok {
 		return nil, errors.New("failed to parse XGame")
 	}
@@ -1049,7 +1049,7 @@ func ParseBlackbox(decrypted string) (*JsFingerprint, error) {
 	if !ok {
 		return nil, errors.New("failed to parse OsName")
 	}
-	fingerprint.Version, ok = arr[29].(string)
+	fingerprint.Version, ok = arr[27].(string)
 	if !ok {
 		return nil, errors.New("failed to parse Version")
 	}
@@ -1082,24 +1082,24 @@ func ParseBlackbox(decrypted string) (*JsFingerprint, error) {
 		return nil, errors.New("failed to parse ScreenColorDepth")
 	}
 	fingerprint.ScreenColorDepth = int(screenColorDepth)
-	fingerprint.OfflineAudioCtx, ok = arr[23].(float64)
+	fingerprint.OfflineAudioCtx, ok = arr[21].(float64)
 	if !ok {
 		return nil, errors.New("failed to parse OfflineAudioCtx")
 	}
-	canvas2DInfo, ok := arr[25].(float64)
+	canvas2DInfo, ok := arr[23].(float64)
 	if !ok {
 		return nil, errors.New("failed to parse Canvas2DInfo")
 	}
 	fingerprint.Canvas2DInfo = int(canvas2DInfo)
-	fingerprint.DateIso, ok = arr[26].(string)
+	fingerprint.DateIso, ok = arr[23].(string)
 	if !ok {
 		return nil, errors.New("failed to parse DateIso")
 	}
-	fingerprint.Game1DateHeader, ok = arr[32].(string)
+	fingerprint.Game1DateHeader, ok = arr[30].(string)
 	if !ok {
 		return nil, errors.New("failed to parse Game1DateHeader")
 	}
-	calcDeltaMs, ok := arr[28].(float64)
+	calcDeltaMs, ok := arr[26].(float64)
 	if !ok {
 		return nil, errors.New("failed to parse CalcDeltaMs")
 	}
@@ -1108,15 +1108,15 @@ func ParseBlackbox(decrypted string) (*JsFingerprint, error) {
 	if !ok {
 		return nil, errors.New("failed to parse NavigatorDoNotTrack")
 	}
-	fingerprint.LocalStorageEnabled, ok = arr[17].(bool)
-	if !ok {
-		return nil, errors.New("failed to parse LocalStorageEnabled")
-	}
-	fingerprint.SessionStorageEnabled, ok = arr[18].(bool)
-	if !ok {
-		return nil, errors.New("failed to parse SessionStorageEnabled")
-	}
-	fingerprint.VideoHash, ok = arr[19].(string)
+	//fingerprint.LocalStorageEnabled, ok = arr[17].(bool)
+	//if !ok {
+	//	return nil, errors.New("failed to parse LocalStorageEnabled")
+	//}
+	//fingerprint.SessionStorageEnabled, ok = arr[18].(bool)
+	//if !ok {
+	//	return nil, errors.New("failed to parse SessionStorageEnabled")
+	//}
+	fingerprint.VideoHash, ok = arr[17].(string)
 	if !ok {
 		return nil, errors.New("failed to parse VideoHash")
 	}
@@ -1124,7 +1124,7 @@ func ParseBlackbox(decrypted string) (*JsFingerprint, error) {
 	if !ok {
 		return nil, errors.New("failed to parse AudioCtxHash")
 	}
-	fingerprint.AudioHash, ok = arr[20].(string)
+	fingerprint.AudioHash, ok = arr[18].(string)
 	if !ok {
 		return nil, errors.New("failed to parse AudioHash")
 	}
@@ -1136,15 +1136,15 @@ func ParseBlackbox(decrypted string) (*JsFingerprint, error) {
 	if !ok {
 		return nil, errors.New("failed to parse PluginsHash")
 	}
-	fingerprint.MediaDevicesHash, ok = arr[21].(string)
+	fingerprint.MediaDevicesHash, ok = arr[19].(string)
 	if !ok {
 		return nil, errors.New("failed to parse MediaDevicesHash")
 	}
-	fingerprint.PermissionsStatesHash, ok = arr[22].(string)
+	fingerprint.PermissionsStatesHash, ok = arr[20].(string)
 	if !ok {
 		return nil, errors.New("failed to parse PermissionsStatesHash")
 	}
-	fingerprint.WebglRenderHash, ok = arr[24].(string)
+	fingerprint.WebglRenderHash, ok = arr[22].(string)
 	if !ok {
 		return nil, errors.New("failed to parse WebglRenderHash")
 	}
