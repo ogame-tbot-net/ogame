@@ -1086,7 +1086,7 @@ func ParseBlackbox(decrypted string) (*JsFingerprint, error) {
 	if !ok {
 		return nil, errors.New("failed to parse OfflineAudioCtx")
 	}
-	canvas2DInfo, ok := arr[23].(float64)
+	canvas2DInfo, ok := arr[24].(float64)
 	if !ok {
 		return nil, errors.New("failed to parse Canvas2DInfo")
 	}
