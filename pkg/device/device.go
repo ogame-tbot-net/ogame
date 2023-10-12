@@ -324,7 +324,7 @@ func (d *Device) GetBlackbox() (string, error) {
 
 	xVec := GenNewXVec()
 	fprt := &JsFingerprint{
-		ConstantVersion:       8,
+		ConstantVersion:       9,
 		UserAgent:             d.userAgent,
 		BrowserName:           string(d.browserName),
 		BrowserEngineName:     d.browserEngineName,
@@ -412,8 +412,8 @@ func (f *JsFingerprint) MarshalJSON() ([]byte, error) {
 	toEnc = append(toEnc, f.ScreenWidth)           // 'd-BEuCA': window.screen.availWidth,
 	toEnc = append(toEnc, f.ScreenHeight)          // 'aM02nQV5': window.screen.availHeight,
 	toEnc = append(toEnc, f.ScreenColorDepth)      // 'ZMk5rRU': window.screen.colorDepth,
-	toEnc = append(toEnc, f.LocalStorageEnabled)   // 'bL8zohR5': Boolean(localStorage),
-	toEnc = append(toEnc, f.SessionStorageEnabled) // 'c8Y6qRuA': Boolean(sessionStorage),
+	//toEnc = append(toEnc, f.LocalStorageEnabled)   // 'bL8zohR5': Boolean(localStorage),
+	//toEnc = append(toEnc, f.SessionStorageEnabled) // 'c8Y6qRuA': Boolean(sessionStorage),
 	toEnc = append(toEnc, f.VideoHash)             // 'dt9DqBc': produceDeterministicHash(getVideoPropsInfo()),
 	toEnc = append(toEnc, f.AudioHash)             // 'YdY6oxI': produceDeterministicHash(getAudioPropsInfo()),
 	toEnc = append(toEnc, f.MediaDevicesHash)      // 'bdI2nwA': produceDeterministicHash(promises[1]),
