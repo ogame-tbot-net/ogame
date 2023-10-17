@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/alaingilbert/ogame/pkg/device"
+
 	"github.com/alaingilbert/ogame/pkg/extractor"
 	"github.com/alaingilbert/ogame/pkg/httpclient"
 	"github.com/alaingilbert/ogame/pkg/ogame"
@@ -64,6 +66,7 @@ type Prioritizable interface {
 	GetAllResources() (map[ogame.CelestialID]ogame.Resources, error)
 	GetAttacks(...Option) ([]ogame.AttackEvent, error)
 	GetAuction() (ogame.Auction, error)
+	GetAvailableDiscoveries() int64
 	GetCachedResearch() ogame.Researches
 	GetCelestial(any) (Celestial, error)
 	GetCelestials() ([]Celestial, error)
@@ -73,23 +76,25 @@ type Prioritizable interface {
 	GetEmpireJSON(nbr int64) (any, error)
 	GetEspionageReport(msgID int64) (ogame.EspionageReport, error)
 	GetEspionageReportFor(ogame.Coordinate) (ogame.EspionageReport, error)
-	GetEspionageReportMessages() ([]ogame.EspionageReportSummary, error)
+	GetEspionageReportMessages(maxPage int64) ([]ogame.EspionageReportSummary, error)
 	GetExpeditionMessageAt(time.Time) (ogame.ExpeditionMessage, error)
-	GetExpeditionMessages() ([]ogame.ExpeditionMessage, error)
+	GetExpeditionMessages(maxPage int64) ([]ogame.ExpeditionMessage, error)
 	GetFleets(...Option) ([]ogame.Fleet, ogame.Slots)
 	GetFleetsFromEventList() []ogame.Fleet
 	GetItems(ogame.CelestialID) ([]ogame.Item, error)
 	GetMoon(any) (Moon, error)
-	GetMoons() []Moon
+	GetMoons() ([]Moon, error)
 	GetPageContent(url.Values) ([]byte, error)
 	GetPlanet(any) (Planet, error)
-	GetPlanets() []Planet
-	GetResearch() ogame.Researches
-	GetSlots() ogame.Slots
-	GetUserInfos() ogame.UserInfos
+	GetPlanets() ([]Planet, error)
+	GetPositionsAvailableForDiscoveryFleet(galaxy int64, system int64) ([]int64, error)
+	GetResearch() (ogame.Researches, error)
+	GetSlots() (ogame.Slots, error)
+	GetUserInfos() (ogame.UserInfos, error)
 	HeadersForPage(url string) (http.Header, error)
 	Highscore(category, typ, page int64) (ogame.Highscore, error)
 	IsUnderAttack() (bool, error)
+	IsUnderAttackByID(CelestialID ogame.CelestialID) (bool, error)
 	Login() error
 	LoginWithBearerToken(token string) (bool, error)
 	LoginWithExistingCookies() (bool, error)
@@ -100,8 +105,9 @@ type Prioritizable interface {
 	RecruitOfficer(typ, days int64) error
 	SendMessage(playerID int64, message string) error
 	SendMessageAlliance(associationID int64, message string) error
-	ServerTime() time.Time
+	ServerTime() (time.Time, error)
 	SetInitiator(initiator string) Prioritizable
+	SetPreferences(ogame.Preferences) error
 	SetVacationMode() error
 	Tx(clb func(tx Prioritizable) error) error
 	UseDM(string, ogame.CelestialID) error
@@ -130,8 +136,10 @@ type Prioritizable interface {
 	GetShips(ogame.CelestialID, ...Option) (ogame.ShipsInfos, error)
 	GetTechs(celestialID ogame.CelestialID) (ogame.ResourcesBuildings, ogame.Facilities, ogame.ShipsInfos, ogame.DefensesInfos, ogame.Researches, ogame.LfBuildings, error)
 	SendFleet(celestialID ogame.CelestialID, ships []ogame.Quantifiable, speed ogame.Speed, where ogame.Coordinate, mission ogame.MissionID, resources ogame.Resources, holdingTime, unionID int64) (ogame.Fleet, error)
+	SendDiscovery(celestialID ogame.CelestialID, where ogame.Coordinate) (bool, error)
 	TearDown(celestialID ogame.CelestialID, id ogame.ID) error
 	TechnologyDetails(celestialID ogame.CelestialID, id ogame.ID) (ogame.TechnologyDetails, error)
+	SendDiscoveryFleet(celestialID ogame.CelestialID, coord ogame.Coordinate) error
 
 	// Planet specific functions
 	DestroyRockets(ogame.PlanetID, int64, int64) error
@@ -147,6 +155,10 @@ type Prioritizable interface {
 	Phalanx(ogame.MoonID, ogame.Coordinate) ([]ogame.Fleet, error)
 	UnsafePhalanx(ogame.MoonID, ogame.Coordinate) ([]ogame.Fleet, error)
 }
+
+// Compile time checks to ensure type satisfies Prioritizable interface
+var _ Prioritizable = (*OGame)(nil)
+var _ Prioritizable = (*Prioritize)(nil)
 
 // Wrapper all available functions to control ogame bot
 type Wrapper interface {
@@ -167,6 +179,7 @@ type Wrapper interface {
 	GetCachedPlayer() ogame.UserInfos
 	GetCachedPreferences() ogame.Preferences
 	GetClient() *httpclient.Client
+	GetDevice() *device.Device
 	GetExtractor() extractor.Extractor
 	GetLanguage() string
 	GetNbSystems() int64
@@ -190,6 +203,7 @@ type Wrapper interface {
 	IsPioneers() bool
 	IsV7() bool
 	IsV9() bool
+	IsV10() bool
 	IsVacationModeEnabled() bool
 	Location() *time.Location
 	OnStateChange(clb func(locked bool, actor string))

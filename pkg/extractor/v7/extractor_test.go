@@ -51,13 +51,13 @@ func TestExtractEspionageReport(t *testing.T) {
 
 func TestExtractCombatReportMessages(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/v7/combat_reports_msgs.html")
-	msgs, _ := NewExtractor().ExtractCombatReportMessagesSummary(pageHTMLBytes)
+	msgs, _, _ := NewExtractor().ExtractCombatReportMessagesSummary(pageHTMLBytes)
 	assert.Equal(t, 10, len(msgs))
 }
 
 func TestExtractCombatReportMessages_Debris(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/v7/combat_reports_debris.html")
-	msgs, _ := NewExtractor().ExtractCombatReportMessagesSummary(pageHTMLBytes)
+	msgs, _, _ := NewExtractor().ExtractCombatReportMessagesSummary(pageHTMLBytes)
 	assert.Equal(t, int64(2400), msgs[0].DebrisField)
 }
 
@@ -303,7 +303,7 @@ func TestExtractUserInfos_es(t *testing.T) {
 
 func TestExtractFleetSlot_FleetDispatch(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/v7/fleetdispatch.html")
-	s := NewExtractor().ExtractSlots(pageHTMLBytes)
+	s, _ := NewExtractor().ExtractSlots(pageHTMLBytes)
 	assert.Equal(t, int64(0), s.InUse)
 	assert.Equal(t, int64(4), s.Total)
 	assert.Equal(t, int64(0), s.ExpInUse)

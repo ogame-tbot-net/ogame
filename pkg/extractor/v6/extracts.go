@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"net/url"
 	"regexp"
@@ -34,16 +35,20 @@ func extractTearDownButtonEnabledFromDoc(doc *goquery.Document) bool {
 }
 
 func extractIsInVacationFromDoc(doc *goquery.Document) bool {
-	href := doc.Find("div#advice-bar a").AttrOr("href", "")
-	if href == "" {
-		return false
-	}
-	u, _ := url.Parse(href)
-	q := u.Query()
-	if q.Get("page") == "preferences" && q.Get("selectedTab") == "3" && q.Get("openGroup") == "0" {
-		return true
-	}
-	return false
+	var isVacation bool
+	doc.Find("div#advice-bar a").Each(func(i int, s *goquery.Selection) {
+		href := s.AttrOr("href", "")
+		if href == "" {
+			return
+		}
+		u, _ := url.Parse(href)
+		q := u.Query()
+		if q.Get("page") == "preferences" && q.Get("selectedTab") == "3" && q.Get("openGroup") == "0" {
+			isVacation = true
+			return
+		}
+	})
+	return isVacation
 }
 
 func extractResourcesFromDoc(doc *goquery.Document) ogame.Resources {
@@ -595,7 +600,7 @@ func extractFleetDispatchACSFromDoc(doc *goquery.Document) []ogame.ACSValues {
 	return out
 }
 
-func extractEspionageReportMessageIDsFromDoc(doc *goquery.Document) ([]ogame.EspionageReportSummary, int64) {
+func extractEspionageReportMessageIDsFromDoc(doc *goquery.Document) ([]ogame.EspionageReportSummary, int64, error) {
 	msgs := make([]ogame.EspionageReportSummary, 0)
 	nbPage := utils.DoParseI64(doc.Find("ul.pagination li").Last().AttrOr("data-page", "1"))
 	doc.Find("li.msg").Each(func(i int, s *goquery.Selection) {
@@ -627,10 +632,10 @@ func extractEspionageReportMessageIDsFromDoc(doc *goquery.Document) ([]ogame.Esp
 			}
 		}
 	})
-	return msgs, nbPage
+	return msgs, nbPage, nil
 }
 
-func extractCombatReportMessagesFromDoc(doc *goquery.Document) ([]ogame.CombatReportSummary, int64) {
+func extractCombatReportMessagesFromDoc(doc *goquery.Document) ([]ogame.CombatReportSummary, int64, error) {
 	msgs := make([]ogame.CombatReportSummary, 0)
 	nbPage := utils.DoParseI64(doc.Find("ul.pagination li").Last().AttrOr("data-page", "1"))
 	doc.Find("li.msg").Each(func(i int, s *goquery.Selection) {
@@ -680,7 +685,7 @@ func extractCombatReportMessagesFromDoc(doc *goquery.Document) ([]ogame.CombatRe
 			}
 		}
 	})
-	return msgs, nbPage
+	return msgs, nbPage, nil
 }
 
 func extractEspionageReportFromDoc(doc *goquery.Document, location *time.Location) (ogame.EspionageReport, error) {
@@ -968,27 +973,32 @@ func extractResourcesProductionsFromDoc(doc *goquery.Document) (ogame.Resources,
 
 func extractPreferencesFromDoc(doc *goquery.Document) ogame.Preferences {
 	prefs := ogame.Preferences{
-		SpioAnz:                      extractSpioAnzFromDoc(doc),
-		DisableChatBar:               extractDisableChatBarFromDoc(doc),
-		DisableOutlawWarning:         extractDisableOutlawWarningFromDoc(doc),
-		MobileVersion:                extractMobileVersionFromDoc(doc),
-		ShowOldDropDowns:             extractShowOldDropDownsFromDoc(doc),
-		ActivateAutofocus:            extractActivateAutofocusFromDoc(doc),
-		EventsShow:                   extractEventsShowFromDoc(doc),
-		SortSetting:                  extractSortSettingFromDoc(doc),
-		SortOrder:                    extractSortOrderFromDoc(doc),
-		ShowDetailOverlay:            extractShowDetailOverlayFromDoc(doc),
-		AnimatedSliders:              extractAnimatedSlidersFromDoc(doc),
-		AnimatedOverview:             extractAnimatedOverviewFromDoc(doc),
-		PopupsNotices:                extractPopupsNoticesFromDoc(doc),
-		PopopsCombatreport:           extractPopopsCombatreportFromDoc(doc),
-		SpioReportPictures:           extractSpioReportPicturesFromDoc(doc),
-		MsgResultsPerPage:            extractMsgResultsPerPageFromDoc(doc),
-		AuctioneerNotifications:      extractAuctioneerNotificationsFromDoc(doc),
-		EconomyNotifications:         extractEconomyNotificationsFromDoc(doc),
-		ShowActivityMinutes:          extractShowActivityMinutesFromDoc(doc),
-		PreserveSystemOnPlanetChange: extractPreserveSystemOnPlanetChangeFromDoc(doc),
-		UrlaubsModus:                 extractUrlaubsModus(doc),
+		SpioAnz:                            extractSpioAnzFromDoc(doc),
+		SpySystemAutomaticQuantity:         extractSpySystemAutomaticQuantityFromDoc(doc),
+		SpySystemTargetPlanetTypes:         extractSpySystemTargetPlanetTypesFromDoc(doc),
+		SpySystemTargetPlayerTypes:         extractSpySystemTargetPlayerTypesFromDoc(doc),
+		SpySystemIgnoreSpiedInLastXMinutes: extractSpySystemIgnoreSpiedInLastXMinutesFromDoc(doc),
+		DisableChatBar:                     extractDisableChatBarFromDoc(doc),
+		DisableOutlawWarning:               extractDisableOutlawWarningFromDoc(doc),
+		MobileVersion:                      extractMobileVersionFromDoc(doc),
+		ShowOldDropDowns:                   extractShowOldDropDownsFromDoc(doc),
+		ActivateAutofocus:                  extractActivateAutofocusFromDoc(doc),
+		EventsShow:                         extractEventsShowFromDoc(doc),
+		SortSetting:                        extractSortSettingFromDoc(doc),
+		SortOrder:                          extractSortOrderFromDoc(doc),
+		ShowDetailOverlay:                  extractShowDetailOverlayFromDoc(doc),
+		AnimatedSliders:                    extractAnimatedSlidersFromDoc(doc),
+		AnimatedOverview:                   extractAnimatedOverviewFromDoc(doc),
+		PopupsNotices:                      extractPopupsNoticesFromDoc(doc),
+		PopopsCombatreport:                 extractPopopsCombatreportFromDoc(doc),
+		SpioReportPictures:                 extractSpioReportPicturesFromDoc(doc),
+		MsgResultsPerPage:                  extractMsgResultsPerPageFromDoc(doc),
+		AuctioneerNotifications:            extractAuctioneerNotificationsFromDoc(doc),
+		EconomyNotifications:               extractEconomyNotificationsFromDoc(doc),
+		ShowActivityMinutes:                extractShowActivityMinutesFromDoc(doc),
+		PreserveSystemOnPlanetChange:       extractPreserveSystemOnPlanetChangeFromDoc(doc),
+		DiscoveryWarningEnabled:            extractDiscoveryWarningEnabledFromDoc(doc),
+		UrlaubsModus:                       extractUrlaubsModus(doc),
 	}
 	if prefs.MobileVersion {
 		prefs.Notifications.BuildList = extractNotifBuildListFromDoc(doc)
@@ -1199,7 +1209,7 @@ func extractFleetsFromDoc(doc *goquery.Document, location *time.Location, lifefo
 	return
 }
 
-func extractSlotsFromDoc(doc *goquery.Document) ogame.Slots {
+func extractSlotsFromDoc(doc *goquery.Document) (ogame.Slots, error) {
 	slots := ogame.Slots{}
 	page := ExtractBodyIDFromDoc(doc)
 	if page == "movement" {
@@ -1221,8 +1231,10 @@ func extractSlotsFromDoc(doc *goquery.Document) ogame.Slots {
 			slots.ExpInUse = utils.DoParseI64(m[1])
 			slots.ExpTotal = utils.DoParseI64(m[2])
 		}
+	} else {
+		return slots, fmt.Errorf("invalid page %s for slots", page)
 	}
-	return slots
+	return slots, nil
 }
 
 func extractServerTimeFromDoc(doc *goquery.Document) (time.Time, error) {
@@ -1243,6 +1255,16 @@ func extractServerTimeFromDoc(doc *goquery.Document) (time.Time, error) {
 
 func extractSpioAnzFromDoc(doc *goquery.Document) int64 {
 	out := utils.DoParseI64(doc.Find("input[name=spio_anz]").AttrOr("value", "1"))
+	return out
+}
+
+func extractSpySystemAutomaticQuantityFromDoc(doc *goquery.Document) int64 {
+	out := utils.DoParseI64(doc.Find("input[name=spySystemAutomaticQuantity]").AttrOr("value", "0"))
+	return out
+}
+
+func extractSpySystemIgnoreSpiedInLastXMinutesFromDoc(doc *goquery.Document) int64 {
+	out := utils.DoParseI64(doc.Find("input[name=spySystemIgnoreSpiedInLastXMinutes]").AttrOr("value", "0"))
 	return out
 }
 
@@ -1278,6 +1300,14 @@ func extractActivateAutofocusFromDoc(doc *goquery.Document) bool {
 
 func extractEventsShowFromDoc(doc *goquery.Document) int64 {
 	return utils.DoParseI64(doc.Find("select[name=eventsShow] option[selected]").AttrOr("value", "1"))
+}
+
+func extractSpySystemTargetPlanetTypesFromDoc(doc *goquery.Document) int64 {
+	return utils.DoParseI64(doc.Find("select[name=spySystemTargetPlanetTypes] option[selected]").AttrOr("value", "0"))
+}
+
+func extractSpySystemTargetPlayerTypesFromDoc(doc *goquery.Document) int64 {
+	return utils.DoParseI64(doc.Find("select[name=spySystemTargetPlayerTypes] option[selected]").AttrOr("value", "0"))
 }
 
 func extractSortSettingFromDoc(doc *goquery.Document) int64 {
@@ -1339,6 +1369,11 @@ func extractShowActivityMinutesFromDoc(doc *goquery.Document) bool {
 
 func extractPreserveSystemOnPlanetChangeFromDoc(doc *goquery.Document) bool {
 	_, exists := doc.Find("input[name=preserveSystemOnPlanetChange]").Attr("checked")
+	return exists
+}
+
+func extractDiscoveryWarningEnabledFromDoc(doc *goquery.Document) bool {
+	_, exists := doc.Find("input[name=discoveryWarningEnabled]").Attr("checked")
 	return exists
 }
 
@@ -1676,8 +1711,8 @@ func extractGalaxyInfos(pageHTML []byte, botPlayerName string, botPlayerID, botP
 	}
 
 	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(tmp.Galaxy))
-	res.Tmpgalaxy = utils.ParseInt(doc.Find("table").AttrOr("data-galaxy", "0"))
-	res.Tmpsystem = utils.ParseInt(doc.Find("table").AttrOr("data-system", "0"))
+	res.SetGalaxy(utils.ParseInt(doc.Find("table").AttrOr("data-galaxy", "0")))
+	res.SetSystem(utils.ParseInt(doc.Find("table").AttrOr("data-system", "0")))
 	isVacationMode := doc.Find("div#warning").Length() == 1
 	if isVacationMode {
 		return res, ogame.ErrAccountInVacationMode
@@ -1776,7 +1811,7 @@ func extractGalaxyInfos(pageHTML []byte, botPlayerName string, botPlayerID, botP
 			planetInfos.Player.Name = playerName
 			planetInfos.Player.Rank = playerRank
 
-			res.Tmpplanets[i] = planetInfos
+			res.SetPlanet(i, planetInfos)
 		}
 	})
 
