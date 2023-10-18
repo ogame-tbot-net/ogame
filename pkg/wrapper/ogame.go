@@ -910,7 +910,10 @@ func (b *OGame) SetProxy(proxyAddress, username, password, proxyType string, log
 }
 
 func (b *OGame) connectChat(chatRetry *exponentialBackoff.ExponentialBackoff, host, port string) {
-	if b.IsV8() || b.IsV9() || b.IsV10() {
+	minVersionV8, _ := version.NewVersion("8")
+	currentVersion, _ := version.NewVersion(b.serverData.Version)
+
+	if currentVersion.GreaterThanOrEqual(minVersionV8) { //if b.IsV8() || b.IsV9() || b.IsV10() {
 		b.connectChatV8(chatRetry, host, port)
 	} else {
 		b.connectChatV7(chatRetry, host, port)
@@ -1781,7 +1784,15 @@ func (b *OGame) setPreferences(p ogame.Preferences) error {
 		"selectedTab": {"0"},
 		"token":       {token},
 	}
-
+	if p.PlayerIntroductionIsVeteran {
+		payload.Set("playerIntroductionIsVeteran", "on")
+	}
+	if p.PlayerIntroductionHideHighlights {
+		payload.Set("playerIntroductionHideHighlights", "on")
+	}
+	if p.PlayerIntroductionHidePanel {
+		payload.Set("playerIntroductionHidePanel", "on")
+	}
 	if p.ShowOldDropDowns {
 		payload.Set("showOldDropDowns", "on")
 	}
@@ -2913,7 +2924,10 @@ func (b *OGame) galaxyInfos(galaxy, system int64, opts ...Option) (ogame.SystemI
 		"system": {utils.FI64(system)},
 	}
 	var vals url.Values
-	if b.IsV10() {
+	v10, _ := version.NewVersion("10")
+	currentVersion, _ := version.NewVersion(b.serverData.Version)
+
+	if currentVersion.GreaterThanOrEqual(v10) { // b.IsV10() {
 		vals = url.Values{"page": {"ingame"}, "component": {"galaxy"}, "action": {"fetchGalaxyContent"}, "ajax": {"1"}, "asJson": {"1"}}
 	} else {
 		vals = url.Values{"page": {"ingame"}, "component": {"galaxyContent"}, "ajax": {"1"}}
@@ -3188,8 +3202,10 @@ func (b *OGame) build(celestialID ogame.CelestialID, id ogame.ID, nbr int64) err
 	if err != nil {
 		return err
 	}
+	v104, _ := version.NewVersion("10.4")
+	currentVersion, _ := version.NewVersion(b.serverData.Version)
 
-	if b.IsV104() {
+	if currentVersion.GreaterThanOrEqual(v104) { // if b.IsV104() {
 		vals := url.Values{
 			"page":      {"componentOnly"},
 			"component": {"buildlistactions"},
@@ -3616,7 +3632,10 @@ func (b *OGame) sendFleet(celestialID ogame.CelestialID, ships []ogame.Quantifia
 	}
 
 	tokenM := regexp.MustCompile(`var fleetSendingToken = "([^"]+)";`).FindSubmatch(pageHTML)
-	if b.IsV8() || b.IsV9() || b.IsV10() {
+	v8, _ := version.NewVersion("8")
+	currentVersion, _ := version.NewVersion(b.serverData.Version)
+
+	if currentVersion.GreaterThanOrEqual(v8) { //b.IsV8() || b.IsV9() || b.IsV10() {
 		tokenM = regexp.MustCompile(`var token = "([^"]+)";`).FindSubmatch(pageHTML)
 	}
 	if len(tokenM) != 2 {
@@ -3688,7 +3707,7 @@ func (b *OGame) sendFleet(celestialID ogame.CelestialID, ships []ogame.Quantifia
 	newResources.Deuterium = utils.MaxInt(newResources.Deuterium, 0)
 
 	// Page 3 : select coord, mission, speed
-	if b.IsV8() || b.IsV9() || b.IsV10() {
+	if currentVersion.GreaterThanOrEqual(v8) { //b.IsV8() || b.IsV9() || b.IsV10() {
 		payload.Set("token", checkRes.NewAjaxToken)
 	}
 	payload.Set("speed", strconv.FormatInt(int64(speed), 10))
@@ -3807,7 +3826,10 @@ func (b *OGame) sendDiscovery(celestialID ogame.CelestialID, where ogame.Coordin
 	payload := url.Values{}
 
 	tokenM := regexp.MustCompile(`var fleetSendingToken = "([^"]+)";`).FindSubmatch(pageHTML)
-	if b.IsV8() || b.IsV9() || b.IsV10() {
+	v8, _ := version.NewVersion("8")
+	currentVersion, _ := version.NewVersion(b.serverData.Version)
+
+	if currentVersion.GreaterThanOrEqual(v8) { //b.IsV8() || b.IsV9() || b.IsV10() {
 		tokenM = regexp.MustCompile(`var token = "([^"]+)";`).FindSubmatch(pageHTML)
 	}
 	if len(tokenM) != 2 {
