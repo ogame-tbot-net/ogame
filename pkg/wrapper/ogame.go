@@ -1784,7 +1784,15 @@ func (b *OGame) setPreferences(p ogame.Preferences) error {
 		"selectedTab": {"0"},
 		"token":       {token},
 	}
-
+	if p.PlayerIntroductionIsVeteran {
+		payload.Set("playerIntroductionIsVeteran", "on")
+	}
+	if p.PlayerIntroductionHideHighlights {
+		payload.Set("playerIntroductionHideHighlights", "on")
+	}
+	if p.PlayerIntroductionHidePanel {
+		payload.Set("playerIntroductionHidePanel", "on")
+	}
 	if p.ShowOldDropDowns {
 		payload.Set("showOldDropDowns", "on")
 	}
