@@ -1,8 +1,9 @@
 package ogame
 
 import (
-	"github.com/alaingilbert/ogame/pkg/utils"
 	"math"
+
+	"github.com/alaingilbert/ogame/pkg/utils"
 )
 
 // ShipsInfos represent a planet ships information
@@ -108,9 +109,9 @@ func (s ShipsInfos) FromQuantifiables(in []Quantifiable) (out ShipsInfos) {
 }
 
 // Cargo returns the total cargo of the ships
-func (s ShipsInfos) Cargo(techs Researches, probeRaids, isCollector, isPioneers bool) (out int64) {
+func (s ShipsInfos) Cargo(techs Researches, probeRaids, isCollector bool, multiplier float64) (out int64) {
 	for _, ship := range Ships {
-		out += ship.GetCargoCapacity(techs, probeRaids, isCollector, isPioneers) * s.ByID(ship.GetID())
+		out += ship.GetCargoCapacity(techs, probeRaids, isCollector, multiplier) * s.ByID(ship.GetID())
 	}
 	return
 }

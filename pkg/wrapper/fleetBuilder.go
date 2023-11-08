@@ -2,9 +2,10 @@ package wrapper
 
 import (
 	"errors"
+	"time"
+
 	"github.com/alaingilbert/ogame/pkg/ogame"
 	"github.com/alaingilbert/ogame/pkg/utils"
-	"time"
 )
 
 // FleetBuilderFactory ...
@@ -238,7 +239,7 @@ func (f *FleetBuilder) sendNow(tx Prioritizable) error {
 	if f.resources.Metal == -1 || f.resources.Crystal == -1 || f.resources.Deuterium == -1 {
 		// Calculate cargo
 		techs, _ := tx.GetResearch()
-		cargoCapacity := f.ships.Cargo(techs, f.b.GetServer().Settings.EspionageProbeRaids == 1, f.b.CharacterClass() == ogame.Collector, f.b.IsPioneers())
+		cargoCapacity := f.ships.Cargo(techs, f.b.GetServer().Settings.EspionageProbeRaids == 1, f.b.CharacterClass() == ogame.Collector, float64(f.b.GetServerData().CargoHyperspaceTechMultiplier))
 		if f.minimumDeuterium <= 0 {
 			planetResources, _ = tx.GetResources(f.origin.GetID())
 		}

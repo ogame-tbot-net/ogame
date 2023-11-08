@@ -371,23 +371,23 @@ func (b *OGame) loginWithExistingCookies() (bool, error) {
 }
 
 // V11 IntroBypass
-func (b *OGame) introBypass(page parser.OverviewPage) (error) {
+func (b *OGame) introBypass(page parser.OverviewPage) error {
 	if bytes.Contains(page.GetContent(), []byte(`currentPage = "intro";`)) {
 		b.debug("bypassing intro page")
 		vals := url.Values{
-			"page": {"ingame"},
+			"page":      {"ingame"},
 			"component": {"intro"},
-			"action": {"continueToClassSelection"},
+			"action":    {"continueToClassSelection"},
 		}
 		payload := url.Values{
-			"username": {b.Player.PlayerName},
+			"username":  {b.Player.PlayerName},
 			"isVeteran": {"1"},
 		}
 		_, err := b.postPageContent(vals, payload)
-		
+
 		if err != nil {
 			return err
-		}		
+		}
 	}
 	return nil
 }
@@ -646,7 +646,7 @@ func (b *OGame) loginPart3(userAccount Account, page parser.OverviewPage) error 
 			ext = v71.NewExtractor()
 		} else if b.IsVGreaterThanOrEqual("7.0.0") {
 			ext = v7.NewExtractor()
-		} 
+		}
 		ext.SetLanguage(b.language)
 		ext.SetLifeformEnabled(page.ExtractLifeformEnabled())
 	} else {
@@ -3718,7 +3718,7 @@ func (b *OGame) sendFleet(celestialID ogame.CelestialID, ships []ogame.Quantifia
 		return ogame.Fleet{}, errors.New("target is not ok")
 	}
 
-	cargo := ogame.ShipsInfos{}.FromQuantifiables(ships).Cargo(b.getCachedResearch(), b.server.Settings.EspionageProbeRaids == 1, b.isCollector(), b.IsPioneers())
+	cargo := ogame.ShipsInfos{}.FromQuantifiables(ships).Cargo(b.getCachedResearch(), b.server.Settings.EspionageProbeRaids == 1, b.isCollector(), float64(b.GetServerData().CargoHyperspaceTechMultiplier))
 	newResources := ogame.Resources{}
 	if resources.Total() > cargo {
 		newResources.Deuterium = int64(math.Min(float64(resources.Deuterium), float64(cargo)))
