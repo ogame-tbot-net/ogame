@@ -148,6 +148,11 @@ func (m Moon) GetLfResearch(options ...Option) (ogame.LfResearches, error) {
 	return m.ogame.GetLfResearch(m.ID.Celestial(), options...)
 }
 
+// GetLfBonuses gets the lifeform techs/buildings bonuses
+func (m Moon) GetLfBonuses(options ...Option) (ogame.LfBonuses, error) {
+	return m.ogame.getLfBonuses(m.ID.Celestial(), options...)
+}
+
 // GetTechs gets (ogame.ResourcesBuildings, ogame.Facilities, ogame.ShipsInfos, ogame.DefensesInfos, ogame.Researches)
 func (m Moon) GetTechs() (ogame.ResourcesBuildings, ogame.Facilities, ogame.ShipsInfos, ogame.DefensesInfos, ogame.Researches, ogame.LfBuildings, error) {
 	return m.ogame.GetTechs(m.ID.Celestial())

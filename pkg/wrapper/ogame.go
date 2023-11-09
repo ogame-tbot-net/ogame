@@ -28,10 +28,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/alaingilbert/ogame/pkg/device"
-
 	"github.com/alaingilbert/clockwork"
-
+	"github.com/alaingilbert/ogame/pkg/device"
 	"github.com/alaingilbert/ogame/pkg/exponentialBackoff"
 	"github.com/alaingilbert/ogame/pkg/extractor"
 	v10 "github.com/alaingilbert/ogame/pkg/extractor/v10"
@@ -48,7 +46,6 @@ import (
 	"github.com/alaingilbert/ogame/pkg/parser"
 	"github.com/alaingilbert/ogame/pkg/taskRunner"
 	"github.com/alaingilbert/ogame/pkg/utils"
-
 	"github.com/PuerkitoBio/goquery"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	version "github.com/hashicorp/go-version"
@@ -3076,6 +3073,15 @@ func (b *OGame) getLfResearch(celestialID ogame.CelestialID, options ...Option) 
 	return page.ExtractLfResearch()
 }
 
+func (b *OGame) getLfBonuses(celestialID ogame.CelestialID, options ...Option) (ogame.LfBonuses, error) {
+	options = append(options, ChangePlanet(celestialID))
+	page, err := getPage[parser.LfBonusesPage](b, options...)
+	if err != nil {
+		return ogame.LfBonuses{}, err
+	}
+	return page.ExtractLfBonuses()
+}
+
 func (b *OGame) getDefense(celestialID ogame.CelestialID, options ...Option) (ogame.DefensesInfos, error) {
 	options = append(options, ChangePlanet(celestialID))
 	page, err := getPage[parser.DefensesPage](b, options...)
@@ -5199,6 +5205,11 @@ func (b *OGame) GetLfBuildings(celestialID ogame.CelestialID, opts ...Option) (o
 // GetLfResearch ...
 func (b *OGame) GetLfResearch(celestialID ogame.CelestialID, opts ...Option) (ogame.LfResearches, error) {
 	return b.WithPriority(taskRunner.Normal).GetLfResearch(celestialID, opts...)
+}
+
+// GetLfBonuses ...
+func (b *OGame) GetLfBonuses(celestialID ogame.CelestialID, opts ...Option) (ogame.LfBonuses, error) {
+	return b.WithPriority(taskRunner.Normal).GetLfBonuses(celestialID, opts...)
 }
 
 // SendDiscoveryFleet ...

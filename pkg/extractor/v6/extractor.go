@@ -6,10 +6,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/alaingilbert/ogame/pkg/ogame"
-
 	"github.com/PuerkitoBio/goquery"
 	"github.com/alaingilbert/clockwork"
+	"github.com/alaingilbert/ogame/pkg/ogame"
 )
 
 // Extractor ...
@@ -911,6 +910,16 @@ func (e *Extractor) ExtractLfResearch(pageHTML []byte) (ogame.LfResearches, erro
 
 // ExtractLfResearchFromDoc ...
 func (e *Extractor) ExtractLfResearchFromDoc(doc *goquery.Document) (ogame.LfResearches, error) {
+	panic("not implemented")
+}
+
+// ExtractLfBonuses ...
+func (e *Extractor) ExtractLfBonuses(pageHTML []byte) (ogame.LfBonuses, error) {
+	panic("not implemented")
+}
+
+// ExtractLfBonusesFromDoc ...
+func (e *Extractor) ExtractLfBonusesFromDoc(doc *goquery.Document) (ogame.LfBonuses, error) {
 	panic("not implemented")
 }
 

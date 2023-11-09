@@ -47,6 +47,7 @@ type DefensesPage struct{ FullPage }
 type MovementPage struct{ FullPage }
 type LfBuildingsPage struct{ FullPage }
 type LfResearchPage struct{ FullPage }
+type LfBonusesPage struct{ FullPage }
 
 type FullPagePages interface {
 	OverviewPage |
@@ -56,6 +57,7 @@ type FullPagePages interface {
 		FacilitiesPage |
 		LfBuildingsPage |
 		LfResearchPage |
+		LfBonusesPage |
 		//TraderOverviewPageContent |
 		//TraderResourcesPageContent |
 		ResearchPage |
@@ -136,6 +138,8 @@ func ParsePage[T FullPagePages](e extractor.Extractor, pageHTML []byte) (T, erro
 		return T(LfBuildingsPage{fullPage}), nil
 	case LfResearchPage:
 		return T(LfResearchPage{fullPage}), nil
+	case LfBonusesPage:
+		return T(LfBonusesPage{fullPage}), nil
 	case SuppliesPage:
 		return T(SuppliesPage{fullPage}), nil
 	case ResourcesSettingsPage:

@@ -751,6 +751,13 @@ func (b *Prioritize) GetLfResearch(celestialID ogame.CelestialID, options ...Opt
 	return b.bot.getLfResearch(celestialID, options...)
 }
 
+// GetLfBonuses ...
+func (b *Prioritize) GetLfBonuses(celestialID ogame.CelestialID, options ...Option) (ogame.LfBonuses, error) {
+	b.begin("GetLfBonuses")
+	defer b.done()
+	return b.bot.getLfBonuses(celestialID, options...)
+}
+
 // SendDiscoveryFleet ...
 func (b *Prioritize) SendDiscoveryFleet(celestialID ogame.CelestialID, coord ogame.Coordinate) error {
 	b.begin("SendDiscoveryFleet")
