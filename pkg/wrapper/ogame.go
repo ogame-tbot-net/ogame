@@ -75,6 +75,7 @@ type OGame struct {
 	isVacationModeEnabled bool
 	researches            *ogame.Researches
 	bonuses               map[ogame.CelestialID]ogame.LfBonuses
+	lastBonus             ogame.LfBonuses
 	planets               []Planet
 	planetsMu             sync.RWMutex
 	ajaxChatToken         string
@@ -800,6 +801,7 @@ func (b *OGame) cacheFullPageInfo(page parser.IFullPage) {
 		id, _ := castedPage.ExtractPlanetID()
 		bonus, _ := castedPage.ExtractLfBonuses()
 		b.bonuses[id] = bonus
+		b.lastBonus = bonus
 	}
 }
 
@@ -3107,16 +3109,13 @@ func (b *OGame) getGenericLfBonuses() (ogame.LfBonuses, error) {
 		return ogame.LfBonuses{}, errors.New("lifeforms not enabled")
 	}
 	if len(b.bonuses) > 0 {
-		for _, bonus := range b.bonuses {
-			return bonus, nil
-		}
+		return b.lastBonus, nil
 	}
-	page, err := getPage[parser.LfBonusesPage](b)
+	_, err := getPage[parser.LfBonusesPage](b)
 	if err != nil {
 		return ogame.LfBonuses{}, err
 	}
-	id, _ := page.ExtractPlanetID()
-	return b.bonuses[id], nil
+	return b.lastBonus, nil
 }
 
 // Returns bonuses for specific celestial, every call is cached
