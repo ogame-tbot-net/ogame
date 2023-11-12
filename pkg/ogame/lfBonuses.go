@@ -66,6 +66,13 @@ func (b LfBonuses) ByDefenseID(id ID) ShipLfBonus {
 	return tmp
 }
 
+func (b LfBonuses) ByUnitID(id ID) ShipLfBonus {
+	if id.IsDefense() {
+		return b.ByDefenseID(id)
+	}
+	return b.ByShipID(id)
+}
+
 func (b LfBonuses) ByBuildingID(id ID) BaseLfBonus {
 	var tmp BaseLfBonus
 	_, e := b.Buildings[id]
@@ -102,7 +109,7 @@ func (b LfBonuses) ByLfTechID(id ID) BaseLfBonus {
 	return tmp
 }
 
-func NewLfBonuses() LfBonuses {
+func newLfBonuses() LfBonuses {
 	var b LfBonuses
 	b.Ships = make(map[ID]ShipLfBonus)
 	b.Defenses = make(map[ID]ShipLfBonus)

@@ -1,6 +1,8 @@
 package wrapper
 
 import (
+	"time"
+	
 	"github.com/alaingilbert/ogame/pkg/ogame"
 	"github.com/go-errors/errors"
 )
@@ -150,10 +152,20 @@ func (m Moon) GetLfResearch(options ...Option) (ogame.LfResearches, error) {
 
 // GetLfBonuses gets the lifeform techs/buildings bonuses
 func (m Moon) GetLfBonuses(options ...Option) (ogame.LfBonuses, error) {
-	return m.ogame.getLfBonuses(m.ID.Celestial(), options...)
+	return m.ogame.GetLfBonuses(m.ID.Celestial(), options...)
 }
 
 // GetTechs gets (ogame.ResourcesBuildings, ogame.Facilities, ogame.ShipsInfos, ogame.DefensesInfos, ogame.Researches)
 func (m Moon) GetTechs() (ogame.ResourcesBuildings, ogame.Facilities, ogame.ShipsInfos, ogame.DefensesInfos, ogame.Researches, ogame.LfBuildings, error) {
 	return m.ogame.GetTechs(m.ID.Celestial())
+}
+
+// GetPrice return price for every ogame.ID for this specific celestial
+func (m Moon) GetPrice(id ogame.ID, nbr int64) (ogame.Resources, error) {
+	return m.ogame.GetPriceWithBonuses(m.ID.Celestial(), id, nbr)
+}
+
+// GetConstructionTimeWithBonuses returns duration with lf bonuses applied
+func (m Moon) GetConstructionTime(id ogame.ID, nbr int64) (time.Duration, error) {
+	return m.ogame.getConstructionTimeWithBonuses(m.ID.Celestial(), id, nbr)
 }

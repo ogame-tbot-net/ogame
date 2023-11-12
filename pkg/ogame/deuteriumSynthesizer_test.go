@@ -31,7 +31,7 @@ func TestDeuteriumSynthesizerPrice(t *testing.T) {
 
 func TestDeuteriumSynthesizerConstructionTime(t *testing.T) {
 	ds := newDeuteriumSynthesizer()
-	assert.Equal(t, 1845*time.Second, ds.ConstructionTime(9, 6, Facilities{}, false, false))
+	assert.Equal(t, 1845*time.Second, ds.ConstructionTime(9, 6, Facilities{}, false, NoClass))
 }
 
 func TestDeuteriumSynthesizer_Production(t *testing.T) {

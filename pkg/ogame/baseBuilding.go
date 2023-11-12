@@ -40,8 +40,15 @@ func (b BaseBuilding) BuildingConstructionTime(level, universeSpeed int64, acc B
 }
 
 // ConstructionTime returns the duration it takes to build given level. Deconstruction time is the same function.
-func (b BaseBuilding) ConstructionTime(level, universeSpeed int64, facilities BuildAccelerators, _, _ bool) time.Duration {
+func (b BaseBuilding) ConstructionTime(level, universeSpeed int64, facilities BuildAccelerators, _ bool, _ CharacterClass) time.Duration {
 	return b.BuildingConstructionTime(level, universeSpeed, facilities)
+}
+
+// ConstructionTimeWithBonuses returns duration with LfBonuses applied
+func (b BaseBuilding) ConstructionTimeWithBonuses(level, universeSpeed int64, facilities BuildAccelerators, _ bool, _ CharacterClass, bonuses LfBonuses) time.Duration {
+	duration := b.BuildingConstructionTime(level, universeSpeed, facilities)
+	bonus := bonuses.ByBuildingID(b.ID).Duration
+	return time.Duration(float64(duration) - float64(duration)*bonus)
 }
 
 // GetLevel returns current level of a building
@@ -52,4 +59,11 @@ func (b BaseBuilding) GetLevel(resourcesBuildings IResourcesBuildings, facilitie
 		return facilities.ByID(b.ID)
 	}
 	return 0
+}
+
+// GetPriceWithBonus returns the price with LfBonuses applied
+func (b BaseBuilding) GetPriceWithBonuses(level int64, bonuses LfBonuses) Resources {
+	price := b.GetPrice(level)
+	bonus := bonuses.ByBuildingID(b.ID).Cost
+	return price.SubPercent(bonus)
 }

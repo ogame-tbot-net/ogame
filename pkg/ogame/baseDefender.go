@@ -17,18 +17,21 @@ type BaseDefender struct {
 }
 
 // GetStructuralIntegrity returns structural integrity of a defender unit
-func (b BaseDefender) GetStructuralIntegrity(researches IResearches) int64 {
-	return int64(float64(b.StructuralIntegrity) * (1 + float64(researches.GetArmourTechnology())*0.1))
+func (b BaseDefender) GetStructuralIntegrity(researches IResearches, bonuses LfBonuses) int64 {
+	bonus := 0.01 * float64(b.StructuralIntegrity) * bonuses.ByUnitID(b.GetID()).Armour
+	return int64(float64(b.StructuralIntegrity)*(1+float64(researches.GetArmourTechnology())*0.1) + bonus)
 }
 
 // GetShieldPower returns shield power of a defender unit
-func (b BaseDefender) GetShieldPower(researches IResearches) int64 {
-	return int64(float64(b.ShieldPower) * (1 + float64(researches.GetShieldingTechnology())*0.1))
+func (b BaseDefender) GetShieldPower(researches IResearches, bonuses LfBonuses) int64 {
+	bonus := 0.01 * float64(b.ShieldPower) * bonuses.ByUnitID(b.GetID()).Shield
+	return int64(float64(b.ShieldPower)*(1+float64(researches.GetShieldingTechnology())*0.1) + bonus)
 }
 
 // GetWeaponPower returns weapon power of a defender unit
-func (b BaseDefender) GetWeaponPower(researches IResearches) int64 {
-	return int64(float64(b.WeaponPower) * (1 + float64(researches.GetWeaponsTechnology())*0.1))
+func (b BaseDefender) GetWeaponPower(researches IResearches, bonuses LfBonuses) int64 {
+	bonus := 0.01 * float64(b.WeaponPower) * bonuses.ByUnitID(b.GetID()).Weapon
+	return int64(float64(b.WeaponPower)*(1+float64(researches.GetWeaponsTechnology())*0.1) + bonus)
 }
 
 // GetRapidfireFrom returns which ships have rapid fire against the defender unit
@@ -51,11 +54,23 @@ func (b BaseDefender) DefenderConstructionTime(nbr, universeSpeed int64, acc Def
 }
 
 // ConstructionTime same as DefenderConstructionTime, needed for BaseOgameObj implementation
-func (b BaseDefender) ConstructionTime(nbr, universeSpeed int64, acc BuildAccelerators, _, _ bool) time.Duration {
+func (b BaseDefender) ConstructionTime(nbr, universeSpeed int64, acc BuildAccelerators, _ bool, _ CharacterClass) time.Duration {
 	return b.DefenderConstructionTime(nbr, universeSpeed, acc)
+}
+
+// ConstructionTimeWithBonuses returns duration with LfBonuses applied
+func (b BaseDefender) ConstructionTimeWithBonuses(nbr, universeSpeed int64, acc BuildAccelerators, _ bool, _ CharacterClass, bonuses LfBonuses) time.Duration {
+	duration := b.DefenderConstructionTime(nbr, universeSpeed, acc)
+	bonus := bonuses.ByUnitID(b.ID).Duration
+	return time.Duration(float64(duration) - float64(duration)*bonus)
 }
 
 // GetPrice returns the price of nbr defender units
 func (b BaseDefender) GetPrice(nbr int64) Resources {
 	return b.Price.Mul(nbr)
+}
+
+// GetPriceWithBonus return the price with LfBonuses applied
+func (b BaseDefender) GetPriceWithBonuses(nbr int64, bonuses LfBonuses) Resources {
+	return b.GetPrice(nbr)
 }

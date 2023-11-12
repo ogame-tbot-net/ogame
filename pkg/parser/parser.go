@@ -106,6 +106,8 @@ func AutoParseFullPage(e extractor.Extractor, pageHTML []byte) (out IFullPage) {
 		out = PreferencesPage{fullPage}
 	} else if bytes.Contains(pageHTML, []byte(`currentPage = "research";`)) {
 		out = ResearchPage{fullPage}
+	} else if bytes.Contains(pageHTML, []byte(`currentPage = "bonussettings";`)) {
+		out = LfBonusesPage{fullPage}
 	} else {
 		out = fullPage
 	}

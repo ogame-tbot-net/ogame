@@ -2,6 +2,7 @@ package ogame
 
 import (
 	"math"
+	"time"
 )
 
 // LazyLfBuildings ...
@@ -200,6 +201,13 @@ type BaseLfBuilding struct {
 	populationIncreaseFactor float64
 }
 
+// ConstructionTimeWithBonuses returns duration with LfBonuses applied
+func (b BaseLfBuilding) ConstructionTimeWithBonuses(level, universeSpeed int64, facilities BuildAccelerators, hasTechnocrat bool, class CharacterClass, bonuses LfBonuses) time.Duration {
+	duration := b.ConstructionTime(level, universeSpeed, facilities, hasTechnocrat, class)
+	bonus := bonuses.ByLfBuildingID(b.ID).Duration
+	return time.Duration(float64(duration) - float64(duration)*bonus)
+}
+
 // GetPrice returns the price to build the given level
 func (b BaseLfBuilding) GetPrice(level int64) Resources {
 	tmp := func(baseCost int64, increaseFactor float64, level int64) int64 {
@@ -215,6 +223,13 @@ func (b BaseLfBuilding) GetPrice(level int64) Resources {
 		Energy:     tmp(b.BaseCost.Energy, b.energyIncreaseFactor, level),
 		Population: tmp2(b.BaseCost.Population, b.populationIncreaseFactor, level),
 	}
+}
+
+// GetPriceWithBonus return the price with LfBonuses applied
+func (b BaseLfBuilding) GetPriceWithBonuses(level int64, bonuses LfBonuses) Resources {
+	price := b.GetPrice(level)
+	bonus := bonuses.ByLfBuildingID(b.ID).Cost
+	return price.SubPercent(bonus)
 }
 
 // Humans

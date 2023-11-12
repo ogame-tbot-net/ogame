@@ -1,5 +1,7 @@
 package ogame
 
+import "math"
+
 // BaseShip base struct for ships
 type BaseShip struct {
 	BaseDefender
@@ -9,20 +11,27 @@ type BaseShip struct {
 }
 
 // GetCargoCapacity returns ship cargo capacity
-func (b BaseShip) GetCargoCapacity(techs IResearches, probeRaids, isCollector bool, multiplier float64) int64 {
+func (b BaseShip) GetCargoCapacity(techs IResearches, probeRaids bool, class CharacterClass, multiplier float64, bonuses LfBonuses) int64 {
 	if b.GetID() == EspionageProbeID && !probeRaids {
 		return 0
 	}
 	hyperspaceBonus := multiplier / 100
-	cargo := b.BaseCargoCapacity + int64(float64(b.BaseCargoCapacity*techs.GetHyperspaceTechnology())*hyperspaceBonus)
-	if isCollector && (b.ID == SmallCargoID || b.ID == LargeCargoID) {
-		cargo += int64(float64(b.BaseCargoCapacity) * 0.25)
+	lfBonus := float64(b.BaseCargoCapacity) * 0.01 * bonuses.ByShipID(b.GetID()).Cargo
+	cargo := float64(b.BaseCargoCapacity) + lfBonus + float64(b.BaseCargoCapacity*techs.GetHyperspaceTechnology())*hyperspaceBonus
+	if class == Collector && (b.ID == SmallCargoID || b.ID == LargeCargoID) {
+		cargo += float64(b.BaseCargoCapacity) * 0.25
 	}
-	return cargo
+	if class == General && b.ID == RecyclerID {
+		cargo += float64(b.BaseCargoCapacity) * 0.2
+	}
+	return int64(math.Floor(cargo))
 }
 
 // GetFuelConsumption returns ship fuel consumption
-func (b BaseShip) GetFuelConsumption(techs IResearches, fleetDeutSaveFactor float64, isGeneral bool) int64 {
+func (b BaseShip) GetFuelConsumption(techs IResearches, fleetDeutSaveFactor float64, class CharacterClass, bonuses LfBonuses) int64 {
+	if b.ID == EspionageProbeID {
+		return 1
+	}
 	fuelConsumption := b.FuelConsumption
 	if b.ID == SmallCargoID && techs.GetImpulseDrive() >= 5 {
 		fuelConsumption *= 2
@@ -31,15 +40,16 @@ func (b BaseShip) GetFuelConsumption(techs IResearches, fleetDeutSaveFactor floa
 	} else if b.ID == RecyclerID && techs.GetImpulseDrive() >= 17 {
 		fuelConsumption *= 2
 	}
-	fuelConsumption = int64(fleetDeutSaveFactor * float64(fuelConsumption))
-	if isGeneral {
-		fuelConsumption = int64(float64(fuelConsumption) / 2)
+	bonus := float64(fuelConsumption) * (1 - fleetDeutSaveFactor)
+	bonus += float64(fuelConsumption) * 0.01 * bonuses.ByShipID(b.GetID()).Consumption
+	if class == General {
+		bonus += float64(fuelConsumption) * 0.25
 	}
-	return fuelConsumption
+	return fuelConsumption - int64(bonus)
 }
 
 // GetSpeed returns speed of the ship
-func (b BaseShip) GetSpeed(techs IResearches, isCollector, isGeneral bool) int64 {
+func (b BaseShip) GetSpeed(techs IResearches, class CharacterClass, bonuses LfBonuses) int64 {
 	techDriveLvl := 0.0
 	driveFactor := 0.2
 	baseSpeed := float64(b.BaseSpeed)
@@ -67,11 +77,12 @@ func (b BaseShip) GetSpeed(techs IResearches, isCollector, isGeneral bool) int64
 		techDriveLvl = float64(techs.GetHyperspaceDrive())
 		driveFactor = 0.3
 	}
-	speed := baseSpeed + (baseSpeed*driveFactor)*techDriveLvl
-	if isCollector && (b.ID == SmallCargoID || b.ID == LargeCargoID) {
+	bonus := 0.01 * baseSpeed * bonuses.ByShipID(b.GetID()).Speed
+	speed := baseSpeed + (baseSpeed*driveFactor)*techDriveLvl + bonus
+	if class == Collector && (b.ID == SmallCargoID || b.ID == LargeCargoID) {
 		speed += baseSpeed
-	} else if isGeneral && (b.ID == RecyclerID || b.ID.IsCombatShip()) && b.ID != DeathstarID {
+	} else if class == General && (b.ID == RecyclerID || b.ID.IsCombatShip()) && b.ID != DeathstarID {
 		speed += baseSpeed
 	}
-	return int64(speed) * multiplier
+	return int64(math.Round(speed)) * multiplier
 }

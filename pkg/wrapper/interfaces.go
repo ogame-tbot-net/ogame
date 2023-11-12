@@ -41,6 +41,8 @@ type Celestial interface {
 	GetTechs() (ogame.ResourcesBuildings, ogame.Facilities, ogame.ShipsInfos, ogame.DefensesInfos, ogame.Researches, ogame.LfBuildings, error)
 	SendFleet([]ogame.Quantifiable, ogame.Speed, ogame.Coordinate, ogame.MissionID, ogame.Resources, int64, int64) (ogame.Fleet, error)
 	TearDown(buildingID ogame.ID) error
+	GetPrice(ogame.ID, int64) (ogame.Resources, error)
+	GetConstructionTime(ogame.ID, int64) (time.Duration, error)
 }
 
 // Prioritizable list of all actions that needs to communicate with ogame server.
@@ -130,6 +132,8 @@ type Prioritizable interface {
 	GetLfBuildings(ogame.CelestialID, ...Option) (ogame.LfBuildings, error)
 	GetLfResearch(ogame.CelestialID, ...Option) (ogame.LfResearches, error)
 	GetLfBonuses(ogame.CelestialID, ...Option) (ogame.LfBonuses, error)
+	GetCachedLfBonuses(ogame.CelestialID, ...Option) (ogame.LfBonuses, error)
+	GetGenericLfBonuses() (ogame.LfBonuses, error)
 	GetProduction(ogame.CelestialID) ([]ogame.Quantifiable, int64, error)
 	GetResources(ogame.CelestialID) (ogame.Resources, error)
 	GetResourcesBuildings(ogame.CelestialID, ...Option) (ogame.ResourcesBuildings, error)
@@ -141,6 +145,8 @@ type Prioritizable interface {
 	TearDown(celestialID ogame.CelestialID, id ogame.ID) error
 	TechnologyDetails(celestialID ogame.CelestialID, id ogame.ID) (ogame.TechnologyDetails, error)
 	SendDiscoveryFleet(celestialID ogame.CelestialID, coord ogame.Coordinate) error
+	GetPriceWithBonuses(ogame.CelestialID, ogame.ID, int64) (ogame.Resources, error)
+	GetConstructionTimeWithBonuses(ogame.CelestialID, ogame.ID, int64) (time.Duration, error)
 
 	// Planet specific functions
 	DestroyRockets(ogame.PlanetID, int64, int64) error

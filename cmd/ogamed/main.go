@@ -12,7 +12,7 @@ import (
 	"github.com/alaingilbert/ogame/pkg/wrapper"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"gopkg.in/urfave/cli.v2"
+	"github.com/urfave/cli/v2"
 )
 
 var version = "0.0.0"
@@ -460,9 +460,15 @@ func start(c *cli.Context) error {
 	e.POST("/bot/planets/:planetID/send-fleet", wrapper.SendFleetHandler)
 	e.POST("/bot/planets/:planetID/send-discovery", wrapper.SendDiscoveryHandler)
 	e.POST("/bot/planets/:planetID/send-ipm", wrapper.SendIPMHandler)
+	e.GET("/bot/planets/:planetID/price/:ogameID/:nbr", wrapper.GetPriceWithBonusesHandler)
 	e.GET("/bot/moons/:moonID/phalanx/:galaxy/:system/:position", wrapper.PhalanxHandler)
 	e.POST("/bot/moons/:moonID/jump-gate", wrapper.JumpGateHandler)
 	e.GET("/game/allianceInfo.php", wrapper.GetAlliancePageContentHandler) // Example: //game/allianceInfo.php?allianceId=500127
+
+	// Cached contents
+	e.GET("/bot/cache/moons", wrapper.GetCachedMoonsHandler)
+	e.GET("/bot/cache/planets", wrapper.GetCachedPlanetsHandler)
+	e.GET("/bot/cache/planets/:planetID/lifeform-bonuses", wrapper.GetCachedLfBonusesHandler)
 
 	// Get/Post Page Content
 	e.GET("/game/index.php", wrapper.GetFromGameHandler)

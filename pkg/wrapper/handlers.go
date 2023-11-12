@@ -368,6 +368,13 @@ func GetMoonsHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, SuccessResp(moons))
 }
 
+// GetCachedMoonsHandler ...
+func GetCachedMoonsHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+	moons := bot.GetCachedMoons()
+	return c.JSON(http.StatusOK, SuccessResp(moons))
+}
+
 // GetMoonHandler ...
 func GetMoonHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
@@ -408,6 +415,13 @@ func GetMoonByCoordHandler(c echo.Context) error {
 func GetPlanetsHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
 	planets, _ := bot.GetPlanets()
+	return c.JSON(http.StatusOK, SuccessResp(planets))
+}
+
+// GetCachedPlanetsHandler ...
+func GetCachedPlanetsHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+	planets := bot.GetCachedPlanets()
 	return c.JSON(http.StatusOK, SuccessResp(planets))
 }
 
@@ -619,6 +633,20 @@ func GetLfBonusesHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid planet id"))
 	}
 	res, err := bot.GetLfBonuses(ogame.CelestialID(planetID))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResp(500, err.Error()))
+	}
+	return c.JSON(http.StatusOK, SuccessResp(res))
+}
+
+// GetCachedLfBonusesHandler ...
+func GetCachedLfBonusesHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+	planetID, err := utils.ParseI64(c.Param("planetID"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid planet id"))
+	}
+	res, err := bot.GetCachedLfBonuses(ogame.CelestialID(planetID))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorResp(500, err.Error()))
 	}
@@ -931,6 +959,28 @@ func GetPriceHandler(c echo.Context) error {
 		return c.JSON(http.StatusOK, SuccessResp(price))
 	}
 	return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid ogameID"))
+}
+
+// GetPriceWithBonusesHandler ...
+func GetPriceWithBonusesHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+	planetID, err := utils.ParseI64(c.Param("planetID"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid planet id"))
+	}
+	ogameID, err := utils.ParseI64(c.Param("ogameID"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid ogameID"))
+	}
+	nbr, err := utils.ParseI64(c.Param("nbr"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid nbr"))
+	}
+	price, err := bot.GetPriceWithBonuses(ogame.CelestialID(planetID), ogame.ID(ogameID), nbr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, err.Error()))
+	}
+	return c.JSON(http.StatusOK, SuccessResp(price))
 }
 
 // SendFleetHandler ...
