@@ -2,6 +2,7 @@ package wrapper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/alaingilbert/ogame/pkg/ogame"
 )
@@ -163,7 +164,22 @@ func (p Planet) GetLfResearch(options ...Option) (ogame.LfResearches, error) {
 	return p.ogame.getLfResearch(p.ID.Celestial(), options...)
 }
 
+// GetLfBonuses gets the lifeform techs/buildings bonuses
+func (p Planet) GetLfBonuses(options ...Option) (ogame.LfBonuses, error) {
+	return p.ogame.GetLfBonuses(p.ID.Celestial(), options...)
+}
+
 // GetTechs gets (ogame.ResourcesBuildings, ogame.Facilities, ogame.ShipsInfos, ogame.DefensesInfos, ogame.Researches)
 func (p Planet) GetTechs() (ogame.ResourcesBuildings, ogame.Facilities, ogame.ShipsInfos, ogame.DefensesInfos, ogame.Researches, ogame.LfBuildings, error) {
 	return p.ogame.GetTechs(p.ID.Celestial())
+}
+
+// GetPrice return price for every ogame.ID for this specific celestial
+func (p Planet) GetPrice(id ogame.ID, nbr int64) (ogame.Resources, error) {
+	return p.ogame.GetPriceWithBonuses(p.ID.Celestial(), id, nbr)
+}
+
+// GetConstructionTimeWithBonuses returns duration with lf bonuses applied
+func (p Planet) GetConstructionTime(id ogame.ID, nbr int64) (time.Duration, error) {
+	return p.ogame.getConstructionTimeWithBonuses(p.ID.Celestial(), id, nbr)
 }

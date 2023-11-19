@@ -581,9 +581,24 @@ func (b *Prioritize) FlightTime(origin, destination ogame.Coordinate, speed ogam
 	b.begin("FlightTime")
 	defer b.done()
 	researches := b.bot.getCachedResearch()
+	bonuses, _ := b.bot.getGenericLfBonuses()
 	return CalcFlightTime(origin, destination, b.bot.serverData.Galaxies, b.bot.serverData.Systems,
 		b.bot.serverData.DonutGalaxy, b.bot.serverData.DonutSystem, b.bot.serverData.GlobalDeuteriumSaveFactor,
-		float64(speed)/10, GetFleetSpeedForMission(b.bot.serverData, missionID), ships, researches, b.bot.characterClass)
+		float64(speed)/10, GetFleetSpeedForMission(b.bot.serverData, missionID), ships, researches, b.bot.characterClass, bonuses)
+}
+
+// GetConstructionTime returns duration with lf bonuses applied for a specific celestial
+func (b *Prioritize) GetConstructionTimeWithBonuses(celestialID ogame.CelestialID, id ogame.ID, nbr int64) (time.Duration, error) {
+	b.begin("GetConstructionTimeWithBonuses")
+	defer b.done()
+	return b.bot.getConstructionTimeWithBonuses(celestialID, id, nbr)
+}
+
+// GetPrice returns price of any ogame.ID with lf bonuses applied for specific celestial
+func (b *Prioritize) GetPriceWithBonuses(celestialID ogame.CelestialID, id ogame.ID, nbr int64) (ogame.Resources, error) {
+	b.begin("GetPriceWithBonuses")
+	defer b.done()
+	return b.bot.getPriceWithBonuses(celestialID, id, nbr)
 }
 
 // Phalanx scan a coordinate from a moon to get fleets information
@@ -749,6 +764,27 @@ func (b *Prioritize) GetLfResearch(celestialID ogame.CelestialID, options ...Opt
 	b.begin("GetLfResearch")
 	defer b.done()
 	return b.bot.getLfResearch(celestialID, options...)
+}
+
+// GetLfBonuses ...
+func (b *Prioritize) GetLfBonuses(celestialID ogame.CelestialID, options ...Option) (ogame.LfBonuses, error) {
+	b.begin("GetLfBonuses")
+	defer b.done()
+	return b.bot.getLfBonuses(celestialID, options...)
+}
+
+// GetCachedLfBonuses ...
+func (b *Prioritize) GetCachedLfBonuses(celestialID ogame.CelestialID, options ...Option) (ogame.LfBonuses, error) {
+	b.begin("GetCachedLfBonuses")
+	defer b.done()
+	return b.bot.getCachedLfBonuses(celestialID, options...)
+}
+
+// GetGenericLfBonuses ...
+func (b *Prioritize) GetGenericLfBonuses() (ogame.LfBonuses, error) {
+	b.begin("GetGenericLfBonuses")
+	defer b.done()
+	return b.bot.getGenericLfBonuses()
 }
 
 // SendDiscoveryFleet ...

@@ -235,11 +235,12 @@ func (f *FleetBuilder) sendNow(tx Prioritizable) error {
 	}
 
 	payload := f.resources
+	bonuses, _ := tx.GetGenericLfBonuses()
 	// Send all resources
 	if f.resources.Metal == -1 || f.resources.Crystal == -1 || f.resources.Deuterium == -1 {
 		// Calculate cargo
 		techs, _ := tx.GetResearch()
-		cargoCapacity := f.ships.Cargo(techs, f.b.GetServer().Settings.EspionageProbeRaids == 1, f.b.CharacterClass() == ogame.Collector, float64(f.b.GetServerData().CargoHyperspaceTechMultiplier))
+		cargoCapacity := f.ships.Cargo(techs, f.b.GetServer().Settings.EspionageProbeRaids == 1, f.b.CharacterClass(), float64(f.b.GetServerData().CargoHyperspaceTechMultiplier), bonuses)
 		if f.minimumDeuterium <= 0 {
 			planetResources, _ = tx.GetResources(f.origin.GetID())
 		}

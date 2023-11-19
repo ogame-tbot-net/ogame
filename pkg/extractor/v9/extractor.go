@@ -147,6 +147,17 @@ func (e *Extractor) ExtractLfResearchFromDoc(doc *goquery.Document) (ogame.LfRes
 	return extractLfResearchFromDoc(doc)
 }
 
+// ExtractLfBonuses ...
+func (e *Extractor) ExtractLfBonuses(pageHTML []byte) (ogame.LfBonuses, error) {
+	doc, _ := goquery.NewDocumentFromReader(bytes.NewReader(pageHTML))
+	return e.ExtractLfBonusesFromDoc(doc)
+}
+
+// ExtractLfBonusesFromDoc ...
+func (e *Extractor) ExtractLfBonusesFromDoc(doc *goquery.Document) (ogame.LfBonuses, error) {
+	return extractLfBonusesFromDoc(doc)
+}
+
 // ExtractTearDownButtonEnabled ...
 func (e *Extractor) ExtractTearDownButtonEnabled(pageHTML []byte) bool {
 	doc, _ := goquery.NewDocumentFromReader(bytes.NewReader(pageHTML))

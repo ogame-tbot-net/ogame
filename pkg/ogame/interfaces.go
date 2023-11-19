@@ -16,10 +16,12 @@ type Celestial interface {
 
 // BaseOgameObj base interface for all ogame objects (buildings, technologies, ships, defenses)
 type BaseOgameObj interface {
-	ConstructionTime(nbr, universeSpeed int64, acc BuildAccelerators, hasTechnocrat, isDiscoverer bool) time.Duration
+	ConstructionTime(nbr, universeSpeed int64, acc BuildAccelerators, hasTechnocrat bool, class CharacterClass) time.Duration
+	ConstructionTimeWithBonuses(nbr, universeSpeed int64, acc BuildAccelerators, hasTechnocrat bool, class CharacterClass, bonuses LfBonuses) time.Duration
 	GetID() ID
 	GetName() string
 	GetPrice(int64) Resources
+	GetPriceWithBonuses(int64, LfBonuses) Resources
 	GetRequirements() map[ID]int64
 	IsAvailable(CelestialType, IResourcesBuildings, IFacilities, IResearches, int64, CharacterClass) bool
 }
@@ -30,17 +32,17 @@ type DefenderObj interface {
 	DefenderConstructionTime(nbr, universeSpeed int64, acc DefenseAccelerators) time.Duration
 	GetRapidfireAgainst() map[ID]int64
 	GetRapidfireFrom() map[ID]int64
-	GetShieldPower(IResearches) int64
-	GetStructuralIntegrity(IResearches) int64
-	GetWeaponPower(IResearches) int64
+	GetShieldPower(techs IResearches, bonuses LfBonuses) int64
+	GetStructuralIntegrity(techs IResearches, bonuses LfBonuses) int64
+	GetWeaponPower(techs IResearches, bonuses LfBonuses) int64
 }
 
 // Ship interface implemented by all ships units
 type Ship interface {
 	DefenderObj
-	GetCargoCapacity(techs IResearches, probeRaids, isCollector bool, multiplier float64) int64
-	GetFuelConsumption(techs IResearches, fleetDeutSaveFactor float64, isGeneral bool) int64
-	GetSpeed(techs IResearches, isCollector, isGeneral bool) int64
+	GetCargoCapacity(techs IResearches, probeRaids bool, class CharacterClass, multiplier float64, bonuses LfBonuses) int64
+	GetFuelConsumption(techs IResearches, fleetDeutSaveFactor float64, class CharacterClass, bonuses LfBonuses) int64
+	GetSpeed(techs IResearches, class CharacterClass, bonuses LfBonuses) int64
 }
 
 // Defense interface implemented by all defenses units
@@ -57,7 +59,7 @@ type Levelable interface {
 // Technology interface that all technologies implement
 type Technology interface {
 	Levelable
-	TechnologyConstructionTime(nbr, universeSpeed int64, acc TechAccelerators, hasTechnocrat, isDiscoverer bool) time.Duration
+	TechnologyConstructionTime(nbr, universeSpeed int64, acc TechAccelerators, hasTechnocrat bool, class CharacterClass) time.Duration
 }
 
 // Building interface that all buildings implement

@@ -9,8 +9,8 @@ import (
 
 func TestRocketLauncherConstructionTime(t *testing.T) {
 	rl := newRocketLauncher()
-	assert.Equal(t, 82*time.Second, rl.ConstructionTime(1, 7, Facilities{Shipyard: 4}, false, false))
-	assert.Equal(t, 164*time.Second, rl.ConstructionTime(2, 7, Facilities{Shipyard: 4}, false, false))
+	assert.Equal(t, 82*time.Second, rl.ConstructionTime(1, 7, Facilities{Shipyard: 4}, false, NoClass))
+	assert.Equal(t, 164*time.Second, rl.ConstructionTime(2, 7, Facilities{Shipyard: 4}, false, NoClass))
 }
 
 func TestRocketLauncher_GetName(t *testing.T) {
@@ -36,15 +36,18 @@ func TestRocketLauncher_GetRapidfireFrom(t *testing.T) {
 
 func TestRocketLauncher_GetStructuralIntegrity(t *testing.T) {
 	rl := newRocketLauncher()
-	assert.Equal(t, rl.StructuralIntegrity, rl.GetStructuralIntegrity(Researches{ArmourTechnology: 0}))
+	lf := newLfBonuses()
+	assert.Equal(t, rl.StructuralIntegrity, rl.GetStructuralIntegrity(Researches{ArmourTechnology: 0}, lf))
 }
 
 func TestRocketLauncher_GetShieldPower(t *testing.T) {
 	rl := newRocketLauncher()
-	assert.Equal(t, rl.ShieldPower, rl.GetShieldPower(Researches{ShieldingTechnology: 0}))
+	lf := newLfBonuses()
+	assert.Equal(t, rl.ShieldPower, rl.GetShieldPower(Researches{ShieldingTechnology: 0}, lf))
 }
 
 func TestRocketLauncher_GetWeaponPower(t *testing.T) {
 	rl := newRocketLauncher()
-	assert.Equal(t, rl.WeaponPower, rl.GetWeaponPower(Researches{WeaponsTechnology: 0}))
+	lf := newLfBonuses()
+	assert.Equal(t, rl.WeaponPower, rl.GetWeaponPower(Researches{WeaponsTechnology: 0}, lf))
 }

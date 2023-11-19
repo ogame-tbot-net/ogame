@@ -723,6 +723,297 @@ func extractLfResearchFromDoc(doc *goquery.Document) (ogame.LfResearches, error)
 	return res, nil
 }
 
+func extractLfBonusesFromDoc(doc *goquery.Document) (ogame.LfBonuses, error) {
+	b := ogame.LfBonuses{}
+
+	// Main extraction
+	doc.Find(".bonusItemsHolder .bonusItemParent").Each(func(_ int, s *goquery.Selection) {
+		bonusID := extractBonusID(s)
+		bonusValue := s.Find(".bonusValues").Text()
+		switch bonusID {
+		case ogame.MetalProductionBonusID:
+			b.Production.Metal = extractBonusFromRow(bonusValue)
+		case ogame.CrystalProductionBonusID:
+			b.Production.Crystal = extractBonusFromRow(bonusValue)
+		case ogame.DeuteriumProductionBonusID:
+			b.Production.Deuterium = extractBonusFromRow(bonusValue)
+		case ogame.PopulationGrowthBonusID:
+			b.Production.Population = extractBonusFromRow(bonusValue)
+		case ogame.FoodProductionBonusID:
+			b.Production.Food = extractBonusFromRow(bonusValue)
+		case ogame.MetalDenCapacityID:
+			b.Dens.Metal = extractBonusFromRow(bonusValue)
+		case ogame.EnergyBoostersID:
+			b.Production.Energy = extractBonusFromRow(bonusValue)
+		case ogame.CrawlerBonusID:
+			b = extractCrawlerBonus(s, b)
+		case ogame.CharacterClassBonusID:
+			b = extractCharacterClassBonus(s, b)
+		case ogame.ResearchTimeReductionID:
+			b = extractTimeReductionBonus(s, b)
+		case ogame.DeuteriumConsumptionBonusID:
+			b = extractShipConsumptionBonus(s, b)
+		case ogame.FleetRecallDeuteriumRefundBonusID:
+			b.RecallRefund = extractBonusFromRow(bonusValue)
+		case ogame.ExpeditionShipBonusID:
+			b.Expeditions.Ships = extractBonusFromRow(bonusValue)
+		case ogame.ExpeditionResourceBonusID:
+			b.Expeditions.Resources = extractBonusFromRow(bonusValue)
+		case ogame.PhalanxRangeBonusID:
+			b.PhalanxRange = extractBonusFromRow(bonusValue)
+		case ogame.ExpeditionSpeedID:
+			b.Expeditions.Speed = extractBonusFromRow(bonusValue)
+		case ogame.ExpeditionDarkMatterBonusID:
+			b.Expeditions.DarkMatter = extractBonusFromRow(bonusValue)
+		case ogame.ExpeditionFleetLossChanceID:
+			b.Expeditions.FleetLoss = extractBonusFromRow(bonusValue)
+		case ogame.ExplorationFlightDurationBonusID:
+			b.Explorations = extractBonusFromRow(bonusValue)
+		case ogame.CrystalDenCapacityID:
+			b.Dens.Crystal = extractBonusFromRow(bonusValue)
+		case ogame.DeuteriumDenCapacityID:
+			b.Dens.Deuterium = extractBonusFromRow(bonusValue)
+		case ogame.MoonSizeID:
+			b.Moons.Size = extractBonusFromRow(bonusValue)
+		case ogame.MoonChanceID:
+			b.Moons.Chance = extractBonusFromRow(bonusValue)
+		case ogame.ShipStatsBonusID:
+			b = extractShipStatsBonus(s, b)
+		case ogame.ResearchCostReductionID:
+			b = extractCostReductionBonus(s, b)
+		case ogame.SpaceDockImprovementID:
+			b.SpaceDock = extractBonusFromRow(bonusValue)
+		}
+	})
+
+	return b, nil
+}
+
+// Extracts ogame id from a bonus item
+func extractBonusID(g *goquery.Selection) ogame.LfBonusID {
+	s, e := g.Attr("data-category")
+	if !e {
+		return 0
+	}
+	s = strings.Replace(s, "bonus-", "", 1)
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return ogame.LfBonusID(i)
+}
+
+// Extracts time reduction from all subitems
+func extractTimeReductionBonus(s *goquery.Selection, l ogame.LfBonuses) ogame.LfBonuses {
+	extractAllSubitems(s, func(id ogame.ID, bonuses *goquery.Selection) {
+		if id.IsBuilding() {
+			var tmp ogame.BaseLfBonus
+			_, e := l.Buildings[id]
+			if e {
+				tmp = l.Buildings[id]
+			}
+			tmp.Duration = utils.RoundThousandth(tmp.Duration + extractBonusFromRow(bonuses.Eq(0).Text()))
+			l.Buildings[id] = tmp
+		} else if id.IsLfBuilding() {
+			var tmp ogame.BaseLfBonus
+			_, e := l.LfBuildings[id]
+			if e {
+				tmp = l.LfBuildings[id]
+			}
+			tmp.Duration = utils.RoundThousandth(tmp.Duration + extractBonusFromRow(bonuses.Eq(0).Text()))
+			l.LfBuildings[id] = tmp
+		} else if id.IsTech() {
+			var tmp ogame.BaseLfBonus
+			_, e := l.Researches[id]
+			if e {
+				tmp = l.Researches[id]
+			}
+			tmp.Duration = utils.RoundThousandth(tmp.Duration + extractBonusFromRow(bonuses.Eq(0).Text()))
+			l.Researches[id] = tmp
+		} else if id.IsLfTech() {
+			var tmp ogame.BaseLfBonus
+			_, e := l.LfResearches[id]
+			if e {
+				tmp = l.LfResearches[id]
+			}
+			tmp.Duration = utils.RoundThousandth(tmp.Duration + extractBonusFromRow(bonuses.Eq(0).Text()))
+			l.LfResearches[id] = tmp
+		} else if id.IsShip() {
+			var tmp ogame.ShipLfBonus
+			_, e := l.Ships[id]
+			if e {
+				tmp = l.Ships[id]
+			}
+			tmp.Duration = utils.RoundThousandth(tmp.Duration + extractBonusFromRow(bonuses.Eq(0).Text()))
+			l.Ships[id] = tmp
+		}
+	})
+	return l
+}
+
+// Extract bonus value from a string [ex: 1.056]
+func extractBonusFromString(s string) float64 {
+	v := strings.TrimSpace(s)
+	v = strings.Replace(v, ",", ".", 1)
+	b, _ := strconv.ParseFloat(v, 64)
+	return utils.RoundThousandth(b)
+}
+
+// Extract bonus value from a row [ex: 1.056 / 30]
+func extractBonusFromRow(r string) float64 {
+	if strings.Contains(r, "/") {
+		s := strings.Split(r, "/")
+		return extractBonusFromString(s[0])
+	}
+	return 0
+}
+
+// Get all subitems in a category
+func extractAllSubitems(s *goquery.Selection, clb func(ogame.ID, *goquery.Selection)) {
+	s.Next().Find(".subItemContent").Each(func(_ int, g *goquery.Selection) {
+		data, e := g.Find(".technology > button.details").Attr("data-target")
+		if !e {
+			return
+		}
+		reg := regexp.MustCompile(`technologyId=([0-9]+)`)
+		raw := reg.FindStringSubmatch(data)
+		if len(raw) != 2 {
+			return
+		}
+		i, err := strconv.Atoi(raw[1])
+		if err != nil {
+			return
+		}
+		bonuses := g.Find(".innerSubItemHolder .innerSubItem > div:last-of-type")
+
+		id := ogame.ID(i)
+		if !id.IsValid() {
+			return
+		}
+
+		clb(id, bonuses)
+	})
+}
+
+// Extracts cost reduction from all subitems
+func extractCostReductionBonus(s *goquery.Selection, l ogame.LfBonuses) ogame.LfBonuses {
+	extractAllSubitems(s, func(id ogame.ID, bonuses *goquery.Selection) {
+		if id.IsBuilding() {
+			var tmp ogame.BaseLfBonus
+			_, e := l.Buildings[id]
+			if e {
+				tmp = l.Buildings[id]
+			}
+			tmp.Cost = utils.RoundThousandth(tmp.Cost + extractBonusFromRow(bonuses.Eq(0).Text()))
+			l.Buildings[id] = tmp
+		} else if id.IsLfBuilding() {
+			var tmp ogame.BaseLfBonus
+			_, e := l.LfBuildings[id]
+			if e {
+				tmp = l.LfBuildings[id]
+			}
+			tmp.Cost = utils.RoundThousandth(tmp.Cost + extractBonusFromRow(bonuses.Eq(0).Text()))
+			l.LfBuildings[id] = tmp
+		} else if id.IsTech() {
+			var tmp ogame.BaseLfBonus
+			_, e := l.Researches[id]
+			if e {
+				tmp = l.Researches[id]
+			}
+			tmp.Cost = utils.RoundThousandth(tmp.Cost + extractBonusFromRow(bonuses.Eq(0).Text()))
+			l.Researches[id] = tmp
+		} else if id.IsLfTech() {
+			var tmp ogame.BaseLfBonus
+			_, e := l.LfResearches[id]
+			if e {
+				tmp = l.LfResearches[id]
+			}
+			tmp.Cost = utils.RoundThousandth(tmp.Cost + extractBonusFromRow(bonuses.Eq(0).Text()))
+			l.LfResearches[id] = tmp
+		}
+	})
+	return l
+}
+
+// Extracts ships consumption reduction
+func extractShipConsumptionBonus(s *goquery.Selection, l ogame.LfBonuses) ogame.LfBonuses {
+	extractAllSubitems(s, func(id ogame.ID, bonuses *goquery.Selection) {
+		if id.IsShip() {
+			_, e := l.Ships[id]
+			if !e {
+				l.Ships[id] = ogame.ShipLfBonus{}
+			}
+			tmp := l.Ships[id]
+			tmp.Consumption = utils.RoundThousandth(tmp.Consumption + extractBonusFromRow(bonuses.Eq(0).Text()))
+			l.Ships[id] = tmp
+		}
+	})
+	return l
+}
+
+// Extracts ships stats
+func extractShipStatsBonus(s *goquery.Selection, l ogame.LfBonuses) ogame.LfBonuses {
+	extractAllSubitems(s, func(id ogame.ID, bonuses *goquery.Selection) {
+		if id.IsShip() {
+			_, e := l.Ships[id]
+			if !e {
+				l.Ships[id] = ogame.ShipLfBonus{}
+			}
+			tmp := l.Ships[id]
+			tmp.Armour = utils.RoundThousandth(tmp.Armour + extractBonusFromString(bonuses.Eq(0).Text()))
+			tmp.Shield = utils.RoundThousandth(tmp.Shield + extractBonusFromString(bonuses.Eq(1).Text()))
+			tmp.Weapon = utils.RoundThousandth(tmp.Weapon + extractBonusFromString(bonuses.Eq(2).Text()))
+			tmp.Cargo = utils.RoundThousandth(tmp.Cargo + extractBonusFromString(bonuses.Eq(3).Text()))
+			tmp.Speed = utils.RoundThousandth(tmp.Speed + extractBonusFromString(bonuses.Eq(4).Text()))
+			l.Ships[id] = tmp
+		} else if id.IsDefense() {
+			_, e := l.Defenses[id]
+			if !e {
+				l.Defenses[id] = ogame.ShipLfBonus{}
+			}
+			tmp := l.Defenses[id]
+			tmp.Armour = utils.RoundThousandth(tmp.Armour + extractBonusFromString(bonuses.Eq(0).Text()))
+			tmp.Shield = utils.RoundThousandth(tmp.Shield + extractBonusFromString(bonuses.Eq(1).Text()))
+			tmp.Weapon = utils.RoundThousandth(tmp.Weapon + extractBonusFromString(bonuses.Eq(2).Text()))
+			l.Defenses[id] = tmp
+		}
+	})
+	return l
+}
+
+// Extracts character class bonuses
+func extractCharacterClassBonus(s *goquery.Selection, l ogame.LfBonuses) ogame.LfBonuses {
+	s.Next().Find(".subItemContent").Each(func(_ int, g *goquery.Selection) {
+		classDiv := g.Find(".characterclass")
+		bonuses := g.Find(".innerSubItemHolder .innerSubItem > div:last-of-type")
+
+		if classDiv.HasClass("miner") {
+			l.Crawlers.Number = utils.RoundThousandth(l.Crawlers.Number + extractBonusFromRow(bonuses.Eq(5).Text()))
+		} else if classDiv.HasClass("warrior") {
+			l.FleetSlots = utils.RoundThousandth(l.FleetSlots + extractBonusFromString(bonuses.Eq(5).Text()))
+			l.Moons.Fields = utils.RoundThousandth(l.Moons.Fields + extractBonusFromString(bonuses.Eq(6).Text()))
+		} else if classDiv.HasClass("discoverer") {
+			l.PlanetSize = utils.RoundThousandth(l.PlanetSize + extractBonusFromString(bonuses.Eq(2).Text()))
+			l.Expeditions.Slots = utils.RoundThousandth(l.Expeditions.Slots + extractBonusFromString(bonuses.Eq(3).Text()))
+			l.Expeditions.LessEnemies = utils.RoundThousandth(l.Expeditions.LessEnemies + extractBonusFromString(bonuses.Eq(4).Text()))
+			l.InactivesLoot = utils.RoundThousandth(l.InactivesLoot + extractBonusFromString(bonuses.Eq(6).Text()))
+		}
+	})
+	return l
+}
+
+// Extracts crawlers bonuses
+func extractCrawlerBonus(s *goquery.Selection, l ogame.LfBonuses) ogame.LfBonuses {
+	s.Next().Find(".subItem").Each(func(_ int, g *goquery.Selection) {
+		e := g.Children().First().Find(".innerBonus").Next().Text()
+		p := g.Children().Last().Find(".innerBonus").Next().Text()
+
+		l.Crawlers.EnergyReduction = utils.RoundThousandth(l.Crawlers.EnergyReduction + extractBonusFromRow(e))
+		l.Crawlers.Production = utils.RoundThousandth(l.Crawlers.Production + extractBonusFromRow(p))
+	})
+	return l
+}
+
 func extractTechnologyDetailsFromDoc(doc *goquery.Document) (out ogame.TechnologyDetails, err error) {
 	out.TechnologyID = ogame.ID(utils.DoParseI64(doc.Find("div#technologydetails").AttrOr("data-technology-id", "")))
 

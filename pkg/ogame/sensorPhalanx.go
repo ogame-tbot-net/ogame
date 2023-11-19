@@ -26,7 +26,7 @@ func (p sensorPhalanx) ScanConsumption() int64 {
 }
 
 // GetRange gets sensor range
-func (p sensorPhalanx) GetRange(lvl int64, isDiscoverer bool) int64 {
+func (p sensorPhalanx) GetRange(lvl int64, isDiscoverer bool, bonus float64) int64 {
 	var phalanxRange int64
 	if lvl == 0 {
 		phalanxRange = 0
@@ -37,6 +37,10 @@ func (p sensorPhalanx) GetRange(lvl int64, isDiscoverer bool) int64 {
 	}
 	if isDiscoverer {
 		phalanxRange += int64(math.Round(0.2 * float64(phalanxRange)))
+	}
+	if bonus > 0 {
+		toFloat := float64(phalanxRange)
+		phalanxRange = int64(math.Floor(toFloat + (toFloat * bonus)))
 	}
 	return phalanxRange
 }

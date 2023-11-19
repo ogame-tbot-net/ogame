@@ -21,14 +21,15 @@ func TestSensorPhalanx_IsAvailable(t *testing.T) {
 
 func TestSensorPhalanx_GetRange(t *testing.T) {
 	sp := newSensorPhalanx()
-	assert.Equal(t, int64(0), sp.GetRange(0, false))
-	assert.Equal(t, int64(1), sp.GetRange(1, false))
-	assert.Equal(t, int64(3), sp.GetRange(2, false))
-	assert.Equal(t, int64(8), sp.GetRange(3, false))
-	assert.Equal(t, int64(15), sp.GetRange(4, false))
+	lf := newLfBonuses()
+	assert.Equal(t, int64(0), sp.GetRange(0, false, lf.PhalanxRange))
+	assert.Equal(t, int64(1), sp.GetRange(1, false, lf.PhalanxRange))
+	assert.Equal(t, int64(3), sp.GetRange(2, false, lf.PhalanxRange))
+	assert.Equal(t, int64(8), sp.GetRange(3, false, lf.PhalanxRange))
+	assert.Equal(t, int64(15), sp.GetRange(4, false, lf.PhalanxRange))
 
-	assert.Equal(t, int64(1), sp.GetRange(1, true))
-	assert.Equal(t, int64(18), sp.GetRange(4, true))
+	assert.Equal(t, int64(1), sp.GetRange(1, true, lf.PhalanxRange))
+	assert.Equal(t, int64(18), sp.GetRange(4, true, lf.PhalanxRange))
 }
 
 func TestSensorPhalanx_ScanConsumption(t *testing.T) {

@@ -67,7 +67,7 @@ func (s ShipsInfos) HasFlyableShips() bool {
 }
 
 // Speed returns the speed of the slowest ship
-func (s ShipsInfos) Speed(techs Researches, isCollector, isGeneral bool) int64 {
+func (s ShipsInfos) Speed(techs Researches, class CharacterClass, bonuses LfBonuses) int64 {
 	var minSpeed int64 = math.MaxInt64
 	for _, ship := range Ships {
 		if ship.GetID() == SolarSatelliteID {
@@ -75,7 +75,7 @@ func (s ShipsInfos) Speed(techs Researches, isCollector, isGeneral bool) int64 {
 		}
 		nbr := s.ByID(ship.GetID())
 		if nbr > 0 {
-			shipSpeed := ship.GetSpeed(techs, isCollector, isGeneral)
+			shipSpeed := ship.GetSpeed(techs, class, bonuses)
 			if shipSpeed < minSpeed {
 				minSpeed = shipSpeed
 			}
@@ -109,9 +109,9 @@ func (s ShipsInfos) FromQuantifiables(in []Quantifiable) (out ShipsInfos) {
 }
 
 // Cargo returns the total cargo of the ships
-func (s ShipsInfos) Cargo(techs Researches, probeRaids, isCollector bool, multiplier float64) (out int64) {
+func (s ShipsInfos) Cargo(techs Researches, probeRaids bool, class CharacterClass, multiplier float64, bonuses LfBonuses) (out int64) {
 	for _, ship := range Ships {
-		out += ship.GetCargoCapacity(techs, probeRaids, isCollector, multiplier) * s.ByID(ship.GetID())
+		out += ship.GetCargoCapacity(techs, probeRaids, class, multiplier, bonuses) * s.ByID(ship.GetID())
 	}
 	return
 }

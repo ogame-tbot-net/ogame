@@ -442,6 +442,19 @@ type LfResearchExtractorBytesDoc interface {
 	LfResearchExtractorDoc
 }
 
+type LfBonusesExtractorBytes interface {
+	ExtractLfBonuses(pageHTML []byte) (ogame.LfBonuses, error)
+}
+
+type LfBonusesExtractorDoc interface {
+	ExtractLfBonusesFromDoc(doc *goquery.Document) (ogame.LfBonuses, error)
+}
+
+type LfBonusesExtractorBytesDoc interface {
+	LfBonusesExtractorBytes
+	LfBonusesExtractorDoc
+}
+
 // ResourcesBuildingsExtractorBytes supplies page
 type ResourcesBuildingsExtractorBytes interface {
 	ExtractResourcesBuildings(pageHTML []byte) (ogame.ResourcesBuildings, error)
@@ -500,6 +513,7 @@ type Extractor interface {
 	HighscoreExtractorBytesDoc
 	LfBuildingsExtractorBytesDoc
 	LfResearchExtractorBytesDoc
+	LfBonusesExtractorBytesDoc
 	MessagesCombatReportExtractorBytesDoc
 	MessagesEspionageReportExtractorBytesDoc
 	MessagesExpeditionExtractorBytesDoc

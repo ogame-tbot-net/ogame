@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"io"
 	"io/ioutil"
+	"math"
 	"math/rand"
 	"net/http"
 	"regexp"
@@ -220,4 +221,9 @@ func AbsDiffUint64(x, y uint64) uint64 {
 		return y - x
 	}
 	return x - y
+}
+
+// Round value to the nearest thousandth
+func RoundThousandth(n float64) float64 {
+	return math.Floor(n*1000) / 1000
 }

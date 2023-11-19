@@ -2,6 +2,7 @@ package ogame
 
 import (
 	"math"
+	"time"
 )
 
 // LazyLfResearches ...
@@ -242,6 +243,13 @@ type BaseLfResearch struct {
 	BaseTechnology
 }
 
+// ConstructionTimeWithBonuses returns duration with LfBonuses applied
+func (b BaseLfResearch) ConstructionTimeWithBonuses(level, universeSpeed int64, facilities BuildAccelerators, hasTechnocrat bool, class CharacterClass, bonuses LfBonuses) time.Duration {
+	duration := b.ConstructionTime(level, universeSpeed, facilities, hasTechnocrat, class)
+	bonus := bonuses.ByLfTechID(b.ID).Duration
+	return time.Duration(float64(duration) - float64(duration)*bonus)
+}
+
 // GetPrice returns the price to build the given level
 func (b BaseLfResearch) GetPrice(level int64) Resources {
 	tmp := func(baseCost int64, increaseFactor float64, level int64) int64 {
@@ -252,6 +260,13 @@ func (b BaseLfResearch) GetPrice(level int64) Resources {
 		Crystal:   tmp(b.BaseCost.Crystal, b.IncreaseFactor, level),
 		Deuterium: tmp(b.BaseCost.Deuterium, b.IncreaseFactor, level),
 	}
+}
+
+// GetPriceWithBonus return the price with LfBonuses applied
+func (b BaseLfResearch) GetPriceWithBonuses(level int64, bonuses LfBonuses) Resources {
+	price := b.GetPrice(level)
+	bonus := bonuses.ByLfTechID(b.ID).Cost
+	return price.SubPercent(bonus)
 }
 
 // Humans
@@ -507,7 +522,7 @@ func newSupercomputer() *supercomputer {
 	return b
 }
 
-//Rocktal
+// Rocktal
 type volcanicBatteries struct {
 	BaseLfResearch
 }
@@ -1014,7 +1029,7 @@ func newMechanGeneralEnhancement() *mechanGeneralEnhancement {
 	return b
 }
 
-//Kaelesh
+// Kaelesh
 type heatRecovery struct {
 	BaseLfResearch
 }

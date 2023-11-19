@@ -158,6 +158,26 @@ func (r Resources) Div(price Resources) int64 {
 	return nb
 }
 
+// AddPercent adds the percentage from the initial values
+func (r Resources) AddPercent(p float64) Resources {
+	return Resources{
+		Metal:     r.Metal + int64(float64(r.Metal)*p),
+		Crystal:   r.Crystal + int64(float64(r.Crystal)*p),
+		Deuterium: r.Deuterium + int64(float64(r.Deuterium)*p),
+		Energy:    r.Energy + int64(float64(r.Energy)*p),
+	}
+}
+
+// SubPercent subtract the percentage from the initial values
+func (r Resources) SubPercent(p float64) Resources {
+	return Resources{
+		Metal:     r.Metal - int64(float64(r.Metal)*p),
+		Crystal:   r.Crystal - int64(float64(r.Crystal)*p),
+		Deuterium: r.Deuterium - int64(float64(r.Deuterium)*p),
+		Energy:    r.Energy - int64(float64(r.Energy)*p),
+	}
+}
+
 // CanAfford alias to Gte
 func (r Resources) CanAfford(cost Resources) bool {
 	return r.Gte(cost)
@@ -178,8 +198,8 @@ func (r Resources) Lte(val Resources) bool {
 }
 
 // FitsIn get the number of ships required to transport the resource
-func (r Resources) FitsIn(ship Ship, techs Researches, probeRaids, isCollector bool, multiplier float64) int64 {
-	cargo := ship.GetCargoCapacity(techs, probeRaids, isCollector, multiplier)
+func (r Resources) FitsIn(ship Ship, techs Researches, probeRaids bool, class CharacterClass, multiplier float64, bonuses LfBonuses) int64 {
+	cargo := ship.GetCargoCapacity(techs, probeRaids, class, multiplier, bonuses)
 	if cargo == 0 {
 		return 0
 	}
