@@ -726,65 +726,77 @@ func extractLfResearchFromDoc(doc *goquery.Document) (ogame.LfResearches, error)
 func extractLfBonusesFromDoc(doc *goquery.Document) (ogame.LfBonuses, error) {
 	b := ogame.LfBonuses{}
 
-	// Main extraction
-	doc.Find(".bonusItemsHolder .bonusItemParent").Each(func(_ int, s *goquery.Selection) {
-		bonusID := extractBonusID(s)
-		bonusValue := s.Find(".bonusValues").Text()
-		switch bonusID {
-		case ogame.MetalProductionBonusID:
-			b.Production.Metal = extractBonusFromRow(bonusValue)
-		case ogame.CrystalProductionBonusID:
-			b.Production.Crystal = extractBonusFromRow(bonusValue)
-		case ogame.DeuteriumProductionBonusID:
-			b.Production.Deuterium = extractBonusFromRow(bonusValue)
-		case ogame.PopulationGrowthBonusID:
-			b.Production.Population = extractBonusFromRow(bonusValue)
-		case ogame.FoodProductionBonusID:
-			b.Production.Food = extractBonusFromRow(bonusValue)
-		case ogame.MetalDenCapacityID:
-			b.Dens.Metal = extractBonusFromRow(bonusValue)
-		case ogame.EnergyBoostersID:
-			b.Production.Energy = extractBonusFromRow(bonusValue)
-		case ogame.CrawlerBonusID:
-			b = extractCrawlerBonus(s, b)
-		case ogame.CharacterClassBonusID:
-			b = extractCharacterClassBonus(s, b)
-		case ogame.ResearchTimeReductionID:
-			b = extractTimeReductionBonus(s, b)
-		case ogame.DeuteriumConsumptionBonusID:
-			b = extractShipConsumptionBonus(s, b)
-		case ogame.FleetRecallDeuteriumRefundBonusID:
-			b.RecallRefund = extractBonusFromRow(bonusValue)
-		case ogame.ExpeditionShipBonusID:
-			b.Expeditions.Ships = extractBonusFromRow(bonusValue)
-		case ogame.ExpeditionResourceBonusID:
-			b.Expeditions.Resources = extractBonusFromRow(bonusValue)
-		case ogame.PhalanxRangeBonusID:
-			b.PhalanxRange = extractBonusFromRow(bonusValue)
-		case ogame.ExpeditionSpeedID:
-			b.Expeditions.Speed = extractBonusFromRow(bonusValue)
-		case ogame.ExpeditionDarkMatterBonusID:
-			b.Expeditions.DarkMatter = extractBonusFromRow(bonusValue)
-		case ogame.ExpeditionFleetLossChanceID:
-			b.Expeditions.FleetLoss = extractBonusFromRow(bonusValue)
-		case ogame.ExplorationFlightDurationBonusID:
-			b.Explorations = extractBonusFromRow(bonusValue)
-		case ogame.CrystalDenCapacityID:
-			b.Dens.Crystal = extractBonusFromRow(bonusValue)
-		case ogame.DeuteriumDenCapacityID:
-			b.Dens.Deuterium = extractBonusFromRow(bonusValue)
-		case ogame.MoonSizeID:
-			b.Moons.Size = extractBonusFromRow(bonusValue)
-		case ogame.MoonChanceID:
-			b.Moons.Chance = extractBonusFromRow(bonusValue)
-		case ogame.ShipStatsBonusID:
-			b = extractShipStatsBonus(s, b)
-		case ogame.ResearchCostReductionID:
-			b = extractCostReductionBonus(s, b)
-		case ogame.SpaceDockImprovementID:
-			b.SpaceDock = extractBonusFromRow(bonusValue)
+	//temporary solution i only need resource bonus %
+	doc.Find("bonus-item-content").Filter("[data-toggable-target=categoryResources]").Find("inner-bonus-item-heading").Each(func(_ int, s *goquery.Selection) {
+		value, e := s.Attr("data-toggable")
+		if e {
+			if value == "subcategoryResourcesExpedition" {
+				bonusValue := strings.Split(s.Find(".subCategoryBonus").Text(), "%")[0]
+				b.Expeditions.Resources = extractBonusFromString(bonusValue)
+			}
 		}
 	})
+
+	// // Main extraction
+	// doc.Find(".bonusItemsHolder .bonusItemParent").Each(func(_ int, s *goquery.Selection) {
+	//bonusID := extractBonusID(s)
+	// 	bonusValue :=	 	bonusID := extractBonusID(s)
+	//s.Find(".bonusValues").Text()
+	// 	switch bonusID {
+	// 	case ogame.MetalProductionBonusID:
+	// 		b.Production.Metal = extractBonusFromRow(bonusValue)
+	// 	case ogame.CrystalProductionBonusID:
+	// 		b.Production.Crystal = extractBonusFromRow(bonusValue)
+	// 	case ogame.DeuteriumProductionBonusID:
+	// 		b.Production.Deuterium = extractBonusFromRow(bonusValue)
+	// 	case ogame.PopulationGrowthBonusID:
+	// 		b.Production.Population = extractBonusFromRow(bonusValue)
+	// 	case ogame.FoodProductionBonusID:
+	// 		b.Production.Food = extractBonusFromRow(bonusValue)
+	// 	case ogame.MetalDenCapacityID:
+	// 		b.Dens.Metal = extractBonusFromRow(bonusValue)
+	// 	case ogame.EnergyBoostersID:
+	// 		b.Production.Energy = extractBonusFromRow(bonusValue)
+	// 	case ogame.CrawlerBonusID:
+	// 		b = extractCrawlerBonus(s, b)
+	// 	case ogame.CharacterClassBonusID:
+	// 		b = extractCharacterClassBonus(s, b)
+	// 	case ogame.ResearchTimeReductionID:
+	// 		b = extractTimeReductionBonus(s, b)
+	// 	case ogame.DeuteriumConsumptionBonusID:
+	// 		b = extractShipConsumptionBonus(s, b)
+	// 	case ogame.FleetRecallDeuteriumRefundBonusID:
+	// 		b.RecallRefund = extractBonusFromRow(bonusValue)
+	// 	case ogame.ExpeditionShipBonusID:
+	// 		b.Expeditions.Ships = extractBonusFromRow(bonusValue)
+	// 	case ogame.ExpeditionResourceBonusID:
+	// 		b.Expeditions.Resources = extractBonusFromRow(bonusValue)
+	// 	case ogame.PhalanxRangeBonusID:
+	// 		b.PhalanxRange = extractBonusFromRow(bonusValue)
+	// 	case ogame.ExpeditionSpeedID:
+	// 		b.Expeditions.Speed = extractBonusFromRow(bonusValue)
+	// 	case ogame.ExpeditionDarkMatterBonusID:
+	// 		b.Expeditions.DarkMatter = extractBonusFromRow(bonusValue)
+	// 	case ogame.ExpeditionFleetLossChanceID:
+	// 		b.Expeditions.FleetLoss = extractBonusFromRow(bonusValue)
+	// 	case ogame.ExplorationFlightDurationBonusID:
+	// 		b.Explorations = extractBonusFromRow(bonusValue)
+	// 	case ogame.CrystalDenCapacityID:
+	// 		b.Dens.Crystal = extractBonusFromRow(bonusValue)
+	// 	case ogame.DeuteriumDenCapacityID:
+	// 		b.Dens.Deuterium = extractBonusFromRow(bonusValue)
+	// 	case ogame.MoonSizeID:
+	// 		b.Moons.Size = extractBonusFromRow(bonusValue)
+	// 	case ogame.MoonChanceID:
+	// 		b.Moons.Chance = extractBonusFromRow(bonusValue)
+	// 	case ogame.ShipStatsBonusID:
+	// 		b = extractShipStatsBonus(s, b)
+	// 	case ogame.ResearchCostReductionID:
+	// 		b = extractCostReductionBonus(s, b)
+	// 	case ogame.SpaceDockImprovementID:
+	// 		b.SpaceDock = extractBonusFromRow(bonusValue)
+	// 	}
+	// })
 
 	return b, nil
 }

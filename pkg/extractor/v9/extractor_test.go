@@ -184,6 +184,12 @@ func TestExtractLfBuildingsRocktal(t *testing.T) {
 	assert.Equal(t, int64(1), res.CrystalFarm)
 }
 
+func TestExtractLfBonuses(t *testing.T) {
+	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/v9.0.4/en/lifeform/lfbonuses.html")
+	res, _ := NewExtractor().ExtractLfBonuses(pageHTMLBytes)
+	assert.Equal(t, float64(7.51), res.Expeditions.Resources)
+}
+
 func TestExtractTechnologyDetails(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/v9.0.4/en/lifeform/technologyDetails_1.html")
 	details, err := NewExtractor().ExtractTechnologyDetails(pageHTMLBytes)

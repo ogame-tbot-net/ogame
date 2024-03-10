@@ -14,7 +14,7 @@ const (
 	DefensesPageName         = "defenses"
 	LfBuildingsPageName      = "lfbuildings"
 	LfResearchPageName       = "lfresearch"
-	LfBonusesPageName        = "bonussettings"
+	LfBonusesPageName        = "lfbonuses"
 	SuppliesPageName         = "supplies"
 	FacilitiesPageName       = "facilities"
 	FleetdispatchPageName    = "fleetdispatch"
