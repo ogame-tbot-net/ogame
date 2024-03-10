@@ -726,79 +726,51 @@ func extractLfResearchFromDoc(doc *goquery.Document) (ogame.LfResearches, error)
 func extractLfBonusesFromDoc(doc *goquery.Document) (ogame.LfBonuses, error) {
 	b := ogame.LfBonuses{}
 
-	//temporary solution i only need resource bonus %
-	doc.Find("bonus-item-content").Filter("[data-toggable-target=categoryResources]").Find("inner-bonus-item-heading").Each(func(_ int, s *goquery.Selection) {
-		value, e := s.Attr("data-toggable")
-		if e {
-			if value == "subcategoryResourcesExpedition" {
-				bonusValue := strings.Split(s.Find(".subCategoryBonus").Text(), "%")[0]
-				b.Expeditions.Resources = extractBonusFromString(bonusValue)
+	// extract only resources bonuses for now
+	// replace with [data-toggable-target^=category] to get all categories
+	doc.Find("bonus-item-content[data-toggable-target=categoryResources]").Each(func(_ int, s *goquery.Selection) {
+		category, _ := s.Attr("data-toggable-target")
+		s.Find("inner-bonus-item-heading[data-toggable^=subcategory]").Each(func(_ int, g *goquery.Selection) {
+			category, subcategory := extractCategories(g, category)
+			if len(category) > 0 && len(subcategory) > 0 {
+				assignBonusValue(g, &b, category, subcategory)
 			}
-		}
+		})
 	})
 
-	// // Main extraction
-	// doc.Find(".bonusItemsHolder .bonusItemParent").Each(func(_ int, s *goquery.Selection) {
-	//bonusID := extractBonusID(s)
-	// 	bonusValue :=	 	bonusID := extractBonusID(s)
-	//s.Find(".bonusValues").Text()
-	// 	switch bonusID {
-	// 	case ogame.MetalProductionBonusID:
-	// 		b.Production.Metal = extractBonusFromRow(bonusValue)
-	// 	case ogame.CrystalProductionBonusID:
-	// 		b.Production.Crystal = extractBonusFromRow(bonusValue)
-	// 	case ogame.DeuteriumProductionBonusID:
-	// 		b.Production.Deuterium = extractBonusFromRow(bonusValue)
-	// 	case ogame.PopulationGrowthBonusID:
-	// 		b.Production.Population = extractBonusFromRow(bonusValue)
-	// 	case ogame.FoodProductionBonusID:
-	// 		b.Production.Food = extractBonusFromRow(bonusValue)
-	// 	case ogame.MetalDenCapacityID:
-	// 		b.Dens.Metal = extractBonusFromRow(bonusValue)
-	// 	case ogame.EnergyBoostersID:
-	// 		b.Production.Energy = extractBonusFromRow(bonusValue)
-	// 	case ogame.CrawlerBonusID:
-	// 		b = extractCrawlerBonus(s, b)
-	// 	case ogame.CharacterClassBonusID:
-	// 		b = extractCharacterClassBonus(s, b)
-	// 	case ogame.ResearchTimeReductionID:
-	// 		b = extractTimeReductionBonus(s, b)
-	// 	case ogame.DeuteriumConsumptionBonusID:
-	// 		b = extractShipConsumptionBonus(s, b)
-	// 	case ogame.FleetRecallDeuteriumRefundBonusID:
-	// 		b.RecallRefund = extractBonusFromRow(bonusValue)
-	// 	case ogame.ExpeditionShipBonusID:
-	// 		b.Expeditions.Ships = extractBonusFromRow(bonusValue)
-	// 	case ogame.ExpeditionResourceBonusID:
-	// 		b.Expeditions.Resources = extractBonusFromRow(bonusValue)
-	// 	case ogame.PhalanxRangeBonusID:
-	// 		b.PhalanxRange = extractBonusFromRow(bonusValue)
-	// 	case ogame.ExpeditionSpeedID:
-	// 		b.Expeditions.Speed = extractBonusFromRow(bonusValue)
-	// 	case ogame.ExpeditionDarkMatterBonusID:
-	// 		b.Expeditions.DarkMatter = extractBonusFromRow(bonusValue)
-	// 	case ogame.ExpeditionFleetLossChanceID:
-	// 		b.Expeditions.FleetLoss = extractBonusFromRow(bonusValue)
-	// 	case ogame.ExplorationFlightDurationBonusID:
-	// 		b.Explorations = extractBonusFromRow(bonusValue)
-	// 	case ogame.CrystalDenCapacityID:
-	// 		b.Dens.Crystal = extractBonusFromRow(bonusValue)
-	// 	case ogame.DeuteriumDenCapacityID:
-	// 		b.Dens.Deuterium = extractBonusFromRow(bonusValue)
-	// 	case ogame.MoonSizeID:
-	// 		b.Moons.Size = extractBonusFromRow(bonusValue)
-	// 	case ogame.MoonChanceID:
-	// 		b.Moons.Chance = extractBonusFromRow(bonusValue)
-	// 	case ogame.ShipStatsBonusID:
-	// 		b = extractShipStatsBonus(s, b)
-	// 	case ogame.ResearchCostReductionID:
-	// 		b = extractCostReductionBonus(s, b)
-	// 	case ogame.SpaceDockImprovementID:
-	// 		b.SpaceDock = extractBonusFromRow(bonusValue)
-	// 	}
-	// })
-
 	return b, nil
+}
+
+// assign bonus value directly to LfBonuses struct
+func assignBonusValue(g *goquery.Selection, b *ogame.LfBonuses, category string, subcategory string) {
+	switch category {
+	case "Resources":
+		switch subcategory {
+		case "0":
+			b.Production.Metal = extractBonusFromStringPercentage(extractRawResourcesBonusValue(g))
+		case "1":
+			b.Production.Crystal = extractBonusFromStringPercentage(extractRawResourcesBonusValue(g))
+		case "2":
+			b.Production.Deuterium = extractBonusFromStringPercentage(extractRawResourcesBonusValue(g))
+		case "Expedition":
+			b.Expeditions.Resources = extractBonusFromStringPercentage(extractRawResourcesBonusValue(g))
+		case "ExpeditionShipsFound":
+			b.Expeditions.Ships = extractBonusFromStringPercentage(extractRawResourcesBonusValue(g))
+		}
+	}
+}
+
+// extract raw bonus value for resources category
+func extractRawResourcesBonusValue(g *goquery.Selection) string {
+	return g.Find(".subCategoryBonus").Text()
+}
+
+// extract subcategories from attribute
+func extractCategories(g *goquery.Selection, category string) (string, string) {
+	c := strings.Replace(category, "category", "", 1)
+	s, _ := g.Attr("data-toggable")
+	v := "sub" + category
+	return c, strings.Replace(s, v, "", 1)
 }
 
 // Extracts ogame id from a bonus item
@@ -861,6 +833,12 @@ func extractTimeReductionBonus(s *goquery.Selection, l ogame.LfBonuses) ogame.Lf
 		}
 	})
 	return l
+}
+
+// Extract bonus value from a string with percentage sign [ex: 1.056%]
+func extractBonusFromStringPercentage(s string) float64 {
+	v := strings.Replace(s, "%", "", 1)
+	return extractBonusFromString(v)
 }
 
 // Extract bonus value from a string [ex: 1.056]
