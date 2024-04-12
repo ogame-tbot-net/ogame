@@ -191,7 +191,6 @@ func TestExtractLfBonuses(t *testing.T) {
 	assert.Equal(t, float64(3.67), res.Ships[ogame.SmallCargoID].Cargo)
 	assert.Equal(t, float64(3.67), res.Ships[ogame.LargeCargoID].Cargo)
 	assert.Equal(t, float64(6.81), res.Production.Metal)
-
 }
 
 func TestExtractTechnologyDetails(t *testing.T) {
