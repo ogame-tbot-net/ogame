@@ -726,67 +726,66 @@ func extractLfResearchFromDoc(doc *goquery.Document) (ogame.LfResearches, error)
 func extractLfBonusesFromDoc(doc *goquery.Document) (ogame.LfBonuses, error) {
 	b := ogame.LfBonuses{}
 
-	// Main extraction
-	doc.Find(".bonusItemsHolder .bonusItemParent").Each(func(_ int, s *goquery.Selection) {
-		bonusID := extractBonusID(s)
-		bonusValue := s.Find(".bonusValues").Text()
-		switch bonusID {
-		case ogame.MetalProductionBonusID:
-			b.Production.Metal = extractBonusFromRow(bonusValue)
-		case ogame.CrystalProductionBonusID:
-			b.Production.Crystal = extractBonusFromRow(bonusValue)
-		case ogame.DeuteriumProductionBonusID:
-			b.Production.Deuterium = extractBonusFromRow(bonusValue)
-		case ogame.PopulationGrowthBonusID:
-			b.Production.Population = extractBonusFromRow(bonusValue)
-		case ogame.FoodProductionBonusID:
-			b.Production.Food = extractBonusFromRow(bonusValue)
-		case ogame.MetalDenCapacityID:
-			b.Dens.Metal = extractBonusFromRow(bonusValue)
-		case ogame.EnergyBoostersID:
-			b.Production.Energy = extractBonusFromRow(bonusValue)
-		case ogame.CrawlerBonusID:
-			b = extractCrawlerBonus(s, b)
-		case ogame.CharacterClassBonusID:
-			b = extractCharacterClassBonus(s, b)
-		case ogame.ResearchTimeReductionID:
-			b = extractTimeReductionBonus(s, b)
-		case ogame.DeuteriumConsumptionBonusID:
-			b = extractShipConsumptionBonus(s, b)
-		case ogame.FleetRecallDeuteriumRefundBonusID:
-			b.RecallRefund = extractBonusFromRow(bonusValue)
-		case ogame.ExpeditionShipBonusID:
-			b.Expeditions.Ships = extractBonusFromRow(bonusValue)
-		case ogame.ExpeditionResourceBonusID:
-			b.Expeditions.Resources = extractBonusFromRow(bonusValue)
-		case ogame.PhalanxRangeBonusID:
-			b.PhalanxRange = extractBonusFromRow(bonusValue)
-		case ogame.ExpeditionSpeedID:
-			b.Expeditions.Speed = extractBonusFromRow(bonusValue)
-		case ogame.ExpeditionDarkMatterBonusID:
-			b.Expeditions.DarkMatter = extractBonusFromRow(bonusValue)
-		case ogame.ExpeditionFleetLossChanceID:
-			b.Expeditions.FleetLoss = extractBonusFromRow(bonusValue)
-		case ogame.ExplorationFlightDurationBonusID:
-			b.Explorations = extractBonusFromRow(bonusValue)
-		case ogame.CrystalDenCapacityID:
-			b.Dens.Crystal = extractBonusFromRow(bonusValue)
-		case ogame.DeuteriumDenCapacityID:
-			b.Dens.Deuterium = extractBonusFromRow(bonusValue)
-		case ogame.MoonSizeID:
-			b.Moons.Size = extractBonusFromRow(bonusValue)
-		case ogame.MoonChanceID:
-			b.Moons.Chance = extractBonusFromRow(bonusValue)
-		case ogame.ShipStatsBonusID:
-			b = extractShipStatsBonus(s, b)
-		case ogame.ResearchCostReductionID:
-			b = extractCostReductionBonus(s, b)
-		case ogame.SpaceDockImprovementID:
-			b.SpaceDock = extractBonusFromRow(bonusValue)
+	l := map[string]bool{
+		"categoryResources": true,
+		"categoryShips":     true,
+		"categoryMisc":      false,
+	}
+	b.Ships = make(map[ogame.ID]ogame.ShipLfBonus)
+	// extract resources bonus and ships cargo bonus for expeditions
+	doc.Find("bonus-item-content[data-toggable-target^=category]").Each(func(_ int, s *goquery.Selection) {
+		category, _ := s.Attr("data-toggable-target")
+		if v, e := l[category]; e {
+			if !v {
+				return
+			}
+		} else {
+			return
 		}
+		s.Find("inner-bonus-item-heading[data-toggable^=subcategory]").Each(func(_ int, g *goquery.Selection) {
+			category, subcategory := extractCategories(g, category)
+			if len(category) > 0 && len(subcategory) > 0 {
+				b = assignBonusValue(g, b, category, subcategory)
+			}
+		})
 	})
 
 	return b, nil
+}
+
+// assign bonus value directly to LfBonuses struct
+func assignBonusValue(g *goquery.Selection, b ogame.LfBonuses, category string, subcategory string) ogame.LfBonuses {
+	switch category {
+	case "Resources":
+		switch subcategory {
+		case "0":
+			b.Production.Metal = extractBonusFromStringPercentage(extractRawResourcesBonusValue(g))
+		case "1":
+			b.Production.Crystal = extractBonusFromStringPercentage(extractRawResourcesBonusValue(g))
+		case "2":
+			b.Production.Deuterium = extractBonusFromStringPercentage(extractRawResourcesBonusValue(g))
+		case "Expedition":
+			b.Expeditions.Resources = extractBonusFromStringPercentage(extractRawResourcesBonusValue(g))
+		case "ExpeditionShipsFound":
+			b.Expeditions.Ships = extractBonusFromStringPercentage(extractRawResourcesBonusValue(g))
+		}
+	case "Ships":
+		b = extractShipStatBonusNew(g, b, subcategory)
+	}
+	return b
+}
+
+// extract raw bonus value for resources category
+func extractRawResourcesBonusValue(g *goquery.Selection) string {
+	return g.Find(".subCategoryBonus").Text()
+}
+
+// extract subcategories from attribute
+func extractCategories(g *goquery.Selection, category string) (string, string) {
+	c := strings.Replace(category, "category", "", 1)
+	s, _ := g.Attr("data-toggable")
+	v := "sub" + category
+	return c, strings.Replace(s, v, "", 1)
 }
 
 // Extracts ogame id from a bonus item
@@ -849,6 +848,12 @@ func extractTimeReductionBonus(s *goquery.Selection, l ogame.LfBonuses) ogame.Lf
 		}
 	})
 	return l
+}
+
+// Extract bonus value from a string with percentage sign [ex: 1.056%]
+func extractBonusFromStringPercentage(s string) float64 {
+	v := strings.Replace(s, "%", "", 1)
+	return extractBonusFromString(v)
 }
 
 // Extract bonus value from a string [ex: 1.056]
@@ -949,6 +954,43 @@ func extractShipConsumptionBonus(s *goquery.Selection, l ogame.LfBonuses) ogame.
 		}
 	})
 	return l
+}
+
+// Extracts ships stats fixed
+func extractShipStatBonusNew(s *goquery.Selection, l ogame.LfBonuses, subcategory string) ogame.LfBonuses {
+	i, err := strconv.Atoi(subcategory)
+	if err != nil {
+		return l
+	}
+	id := ogame.ID(i)
+	if !id.IsValid() {
+		return l
+	}
+	extractAllSubitemsNew(s, func(bonuses *goquery.Selection) {
+		if id.IsShip() {
+			_, e := l.Ships[id]
+			if !e {
+				l.Ships[id] = ogame.ShipLfBonus{}
+			}
+			tmp := l.Ships[id]
+			tmp.Armour = tmp.Armour + extractBonusFromStringPercentage(bonuses.Children().Eq(0).Text())
+			tmp.Shield = tmp.Shield + extractBonusFromStringPercentage(bonuses.Children().Eq(1).Text())
+			tmp.Weapon = tmp.Weapon + extractBonusFromStringPercentage(bonuses.Children().Eq(2).Text())
+			tmp.Speed = tmp.Speed + extractBonusFromStringPercentage(bonuses.Children().Eq(3).Text())
+			tmp.Cargo = tmp.Cargo + extractBonusFromStringPercentage(bonuses.Children().Eq(4).Text())
+			tmp.Consumption = tmp.Consumption + extractBonusFromStringPercentage(bonuses.Eq(5).Text())
+			l.Ships[id] = tmp
+		}
+	})
+	return l
+}
+
+// Get all bonuses from single ship
+func extractAllSubitemsNew(s *goquery.Selection, clb func(*goquery.Selection)) {
+	s.Find("bonus-items").Each(func(_ int, g *goquery.Selection) {
+		bonuses := g
+		clb(bonuses)
+	})
 }
 
 // Extracts ships stats
