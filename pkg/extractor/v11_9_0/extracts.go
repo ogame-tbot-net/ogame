@@ -1,7 +1,6 @@
 package v11_9_0
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"regexp"
@@ -195,33 +194,28 @@ func extractConstructions(pageHTML []byte, clock clockwork.Clock) (buildingID og
 	researchID ogame.ID, researchCountdown int64,
 	lfBuildingID ogame.ID, lfBuildingCountdown int64,
 	lfResearchID ogame.ID, lfResearchCountdown int64) {
-
-	doc, _ := goquery.NewDocumentFromReader(bytes.NewReader(pageHTML))
-
-	buildingCountdownMatch, ok := doc.Find(".buildingCountdown").Attr("data-end")
-	if ok {
-		buildingCountdown = utils.ParseInt(buildingCountdownMatch) - clock.Now().Unix()
+	buildingCountdownMatch := regexp.MustCompile(`new CountdownTimer\('buildingCountdown', (\d+),`).FindSubmatch(pageHTML)
+	if len(buildingCountdownMatch) > 0 {
+		buildingCountdown = int64(utils.ToInt(buildingCountdownMatch[1]))
 		buildingIDInt := utils.ToInt(regexp.MustCompile(`onclick="cancelbuilding\((\d+),`).FindSubmatch(pageHTML)[1])
 		buildingID = ogame.ID(buildingIDInt)
 	}
-	researchCountdownMatch, ok := doc.Find(".researchCountdown").Attr("data-end")
-	if ok {
-		researchCountdown = utils.ParseInt(researchCountdownMatch) - clock.Now().Unix()
+	researchCountdownMatch := regexp.MustCompile(`new CountdownTimer\('researchCountdown', (\d+),`).FindSubmatch(pageHTML)
+	if len(researchCountdownMatch) > 0 {
+		researchCountdown = int64(utils.ToInt(researchCountdownMatch[1]))
 		researchIDInt := utils.ToInt(regexp.MustCompile(`onclick="cancelresearch\((\d+),`).FindSubmatch(pageHTML)[1])
 		researchID = ogame.ID(researchIDInt)
 	}
-
-	lfBuildingCountdownMatch, ok := doc.Find(".lfbuildingCountdown").Attr("data-end")
-	if ok {
-		lfBuildingCountdown = utils.ParseInt(lfBuildingCountdownMatch) - clock.Now().Unix()
+	lfBuildingCountdownMatch := regexp.MustCompile(`new CountdownTimer\('lfbuildingCountdown', (\d+),`).FindSubmatch(pageHTML)
+	if len(lfBuildingCountdownMatch) > 0 {
+		lfBuildingCountdown = int64(utils.ToInt(lfBuildingCountdownMatch[1]))
 		lfBuildingIDInt := utils.ToInt(regexp.MustCompile(`onclick="cancellfbuilding\((\d+),`).FindSubmatch(pageHTML)[1])
 		lfBuildingID = ogame.ID(lfBuildingIDInt)
 	}
-
-	lfResearchCountdownMatch, ok := doc.Find(".lfresearchCountdown").Attr("data-end")
-	if ok {
-		lfResearchCountdown = utils.ParseInt(lfResearchCountdownMatch) - clock.Now().Unix()
-		lfResearchIDInt := utils.ToInt(regexp.MustCompile(`onclick="cancellfbuilding\((\d+),`).FindSubmatch(pageHTML)[1])
+	lfResearchCountdownMatch := regexp.MustCompile(`new CountdownTimer\('lfResearchCountdown', (\d+),`).FindSubmatch(pageHTML)
+	if len(lfResearchCountdownMatch) > 0 {
+		lfResearchCountdown = int64(utils.ToInt(lfResearchCountdownMatch[1]))
+		lfResearchIDInt := utils.ToInt(regexp.MustCompile(`onclick="cancellfresearch\((\d+),`).FindSubmatch(pageHTML)[1])
 		lfResearchID = ogame.ID(lfResearchIDInt)
 	}
 	return
