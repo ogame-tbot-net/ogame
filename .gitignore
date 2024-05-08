@@ -8,4 +8,7 @@ cover.out
 vendor
 /ogame.code-workspace
 cmd/ogamed/bin
+cmd/ogamed/ogamed
+cmd/ogamed/ogamed.exe
 /.vs
+/.vscode

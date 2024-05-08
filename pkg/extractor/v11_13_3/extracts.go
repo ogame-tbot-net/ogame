@@ -61,6 +61,9 @@ func assignBonusValue(g *goquery.Selection, b ogame.LfBonuses, category string, 
 		}
 	case "Ships":
 		b = extractShipStatBonusNew(g, b, subcategory)
+	case "CostAndTime":
+		b = extractCostReductionBonus(g, b)
+		b = extractTimeReductionBonus(g, b)
 	}
 	return b
 }

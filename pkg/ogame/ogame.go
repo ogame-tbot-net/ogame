@@ -183,6 +183,7 @@ type CombatReportSummary struct {
 	Metal        int64
 	Crystal      int64
 	Deuterium    int64
+	Food         int64
 	DebrisField  int64
 	CreatedAt    time.Time
 }
