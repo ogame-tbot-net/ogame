@@ -179,6 +179,7 @@ type CombatReportSummary struct {
 	Destination  Coordinate
 	AttackerName string
 	DefenderName string
+	Resources    int64
 	Loot         int64
 	Metal        int64
 	Crystal      int64
@@ -203,6 +204,8 @@ type ExpeditionMessage struct {
 	Coordinate Coordinate
 	Content    string
 	CreatedAt  time.Time
+	Resources  Resources
+	Ships      ShipsInfos
 }
 
 // MarketplaceMessage ...

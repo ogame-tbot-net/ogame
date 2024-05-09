@@ -229,6 +229,42 @@ func HasTechnocratHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, SuccessResp(hasTechnocrat))
 }
 
+// GetExpeditionMessagesHandler ...
+func GetExpeditionMessagesHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+	messages, _ := bot.GetExpeditionMessages(-1)
+	return c.JSON(http.StatusOK, SuccessResp(messages))
+}
+
+// GetCombatReportMessagesHandler
+func GetCombatReportMessagesHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+	messages, _ := bot.getCombatReportMessages(-1)
+	return c.JSON(http.StatusOK, SuccessResp(messages))
+}
+
+// GetCombatReportForHandler ...
+func GetCombatReportForHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+	galaxy, err := utils.ParseI64(c.Param("galaxy"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid galaxy"))
+	}
+	system, err := utils.ParseI64(c.Param("system"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid system"))
+	}
+	position, err := utils.ParseI64(c.Param("position"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResp(400, "invalid position"))
+	}
+	combatReport, err := bot.getCombatReportFor(ogame.Coordinate{Type: ogame.PlanetType, Galaxy: galaxy, System: system, Position: position})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResp(500, err.Error()))
+	}
+	return c.JSON(http.StatusOK, SuccessResp(combatReport))
+}
+
 // GetEspionageReportMessagesHandler ...
 func GetEspionageReportMessagesHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)
