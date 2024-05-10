@@ -682,6 +682,13 @@ func (b *Prioritize) DoAuction(bid map[ogame.CelestialID]ogame.Resources) error 
 	return b.bot.doAuction(ogame.CelestialID(0), bid)
 }
 
+// GetAllianceClass
+func (b *Prioritize) GetAllianceClass() ogame.AllianceClass {
+	b.begin("GetAllianceClass")
+	defer b.done()
+	return b.bot.getAllianceClass()
+}
+
 // Highscore ...
 func (b *Prioritize) Highscore(category, typ, page int64) (ogame.Highscore, error) {
 	b.begin("Highscore")

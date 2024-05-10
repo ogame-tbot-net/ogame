@@ -194,6 +194,12 @@ func GetCharacterClassHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, SuccessResp(bot.CharacterClass()))
 }
 
+// GetAllianceClassHandler
+func GetAllianceClassHandler(c echo.Context) error {
+	bot := c.Get("bot").(*OGame)
+	return c.JSON(http.StatusOK, SuccessResp(bot.GetAllianceClass()))
+}
+
 // HasCommanderHandler ...
 func HasCommanderHandler(c echo.Context) error {
 	bot := c.Get("bot").(*OGame)

@@ -2427,6 +2427,47 @@ func (b *OGame) createUnion(fleet ogame.Fleet, unionUsers []string) (int64, erro
 	return res.UnionID, nil
 }
 
+func (b *OGame) getAllianceClass() ogame.AllianceClass {
+	pageHTML, _ := b.getPageContent(url.Values{"page": {"ingame"}, "tab": {"alliance"}})
+	getToken := func(pageHTML []byte) (string, error) {
+		m := regexp.MustCompile(`var token = "([^"]+)"`).FindSubmatch(pageHTML)
+		if len(m) != 2 {
+			return "", errors.New("unable to find token")
+		}
+		return string(m[1]), nil
+	}
+	token, _ := getToken(pageHTML)
+	var res struct {
+		Target  string            `json:"target"`
+		Content map[string]string `json:"content"`
+		Files   struct {
+			Js  []string `json:"js"`
+			Css []string `json:"css"`
+		} `json:"files"`
+		Page struct {
+			StateObj json.RawMessage `json:"stateObj"` // Used json.RawMessage for flexibility
+			Title    string          `json:"title"`
+			Url      string          `json:"url"`
+		} `json:"page"`
+		ServerTime   int64  `json:"serverTime"`
+		NewAjaxToken string `json:"newAjaxToken"`
+	}
+	jsonData, _ := b.getPageContent(url.Values{
+		"page":      {"ingame"},
+		"component": {"alliance"},
+		"tab":       {"overview"},
+		"action":    {"fetchOverview"},
+		"ajax":      {"1"},
+		"token":     {token},
+	})
+	if err := json.Unmarshal([]byte(jsonData), &res); err != nil {
+		fmt.Println("Error unmarshalling JSON:", err)
+		return ogame.NoAllianceClass
+	} else {
+		return b.extractor.ExtractAllianceClass([]byte(res.Content["alliance/alliance_overview"]))
+	}
+}
+
 func (b *OGame) highscore(category, typ, page int64) (out ogame.Highscore, err error) {
 	if category < 1 || category > 2 {
 		return out, errors.New("category must be in [1, 2] (1:player, 2:alliance)")
@@ -5358,6 +5399,11 @@ func (b *OGame) GetEmpireJSON(nbr int64) (any, error) {
 // CharacterClass returns the bot character class
 func (b *OGame) CharacterClass() ogame.CharacterClass {
 	return b.characterClass
+}
+
+// AllianceClass returns the bot alliance class
+func (b *OGame) GetAllianceClass() ogame.AllianceClass {
+	return b.WithPriority(taskRunner.Normal).GetAllianceClass()
 }
 
 // GetAuction ...

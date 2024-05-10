@@ -400,6 +400,7 @@ func start(c *cli.Context) error {
 	e.GET("/bot/is-vacation-mode", wrapper.IsVacationModeHandler)
 	e.GET("/bot/user-infos", wrapper.GetUserInfosHandler)
 	e.GET("/bot/character-class", wrapper.GetCharacterClassHandler)
+	e.GET("/bot/alliance-class", wrapper.GetAllianceClassHandler)
 	e.GET("/bot/has-commander", wrapper.HasCommanderHandler)
 	e.GET("/bot/has-admiral", wrapper.HasAdmiralHandler)
 	e.GET("/bot/has-engineer", wrapper.HasEngineerHandler)

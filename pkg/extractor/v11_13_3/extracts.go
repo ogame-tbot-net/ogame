@@ -315,3 +315,16 @@ func extractShipStatsBonus(s *goquery.Selection, l ogame.LfBonuses) ogame.LfBonu
 	})
 	return l
 }
+
+func extractAllianceClassFromDoc(doc *goquery.Document) ogame.AllianceClass {
+	allianceClass := ogame.NoAllianceClass
+	el := doc.Find("div.allianceclass").First()
+	if el.HasClass("warrior") {
+		allianceClass = ogame.Warrior
+	} else if el.HasClass("trader") {
+		allianceClass = ogame.Trader
+	} else if el.HasClass("explorer") {
+		allianceClass = ogame.Researcher
+	}
+	return allianceClass
+}
