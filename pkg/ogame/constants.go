@@ -99,6 +99,8 @@ func (c CharacterClass) IsDiscoverer() bool {
 // Lifeform bonuses ...
 type LfBonusID int64
 
+type ExpeditionResult int64
+
 func (l LfBonusID) String() string {
 	switch l {
 	case MetalProductionBonusID:
@@ -423,4 +425,18 @@ const (
 	ShipStatsBonusID                  LfBonusID = 27
 	ResearchCostReductionID           LfBonusID = 28
 	SpaceDockImprovementID            LfBonusID = 29
+
+	// Expedition results
+	ExpeditionResultUnknown    ExpeditionResult = 0
+	ExpeditionResultNothing    ExpeditionResult = 1
+	ExpeditionResultResources  ExpeditionResult = 2
+	ExpeditionResultShips      ExpeditionResult = 3
+	ExpeditionResuldDarkmatter ExpeditionResult = 4
+	ExpeditionResultEarly      ExpeditionResult = 5
+	ExpeditionResultLate       ExpeditionResult = 6
+	ExpeditionResultPirates    ExpeditionResult = 7
+	ExpeditionResultAliens     ExpeditionResult = 8
+	ExpeditionResultTrader     ExpeditionResult = 9
+	ExpeditionResultBlackHole  ExpeditionResult = 10
+	ExpeditionResultItem       ExpeditionResult = 11
 )

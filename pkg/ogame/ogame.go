@@ -200,12 +200,13 @@ type EspionageReportSummary struct {
 
 // ExpeditionMessage ...
 type ExpeditionMessage struct {
-	ID         int64
-	Coordinate Coordinate
-	Content    string
-	CreatedAt  time.Time
-	Resources  Resources
-	Ships      ShipsInfos
+	ID               int64
+	Coordinate       Coordinate
+	Content          string
+	CreatedAt        time.Time
+	Resources        Resources
+	Ships            ShipsInfos
+	ExpeditionResult ExpeditionResult
 }
 
 // MarketplaceMessage ...
