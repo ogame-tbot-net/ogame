@@ -468,7 +468,7 @@ func start(c *cli.Context) error {
 	// Cached contents
 	e.GET("/bot/cache/moons", wrapper.GetCachedMoonsHandler)
 	e.GET("/bot/cache/planets", wrapper.GetCachedPlanetsHandler)
-	e.GET("/bot/cache/planets/:planetID/lifeform-bonuses", wrapper.GetCachedLfBonusesHandler)
+	e.GET("/bot/cache/planets/:planetID/lifeform-bonuses", wrapper.GetLfBonusesHandler)
 
 	// Get/Post Page Content
 	e.GET("/game/index.php", wrapper.GetFromGameHandler)

@@ -184,6 +184,15 @@ func TestExtractLfBuildingsRocktal(t *testing.T) {
 	assert.Equal(t, int64(1), res.CrystalFarm)
 }
 
+func TestExtractLfBonuses(t *testing.T) {
+	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/v9.0.4/en/lifeform/lfbonuses.html")
+	res, _ := NewExtractor().ExtractLfBonuses(pageHTMLBytes)
+	assert.Equal(t, float64(15.59), res.Expeditions.Resources)
+	assert.Equal(t, float64(3.67), res.Ships[ogame.SmallCargoID].Cargo)
+	assert.Equal(t, float64(3.67), res.Ships[ogame.LargeCargoID].Cargo)
+	assert.Equal(t, float64(6.81), res.Production.Metal)
+}
+
 func TestExtractTechnologyDetails(t *testing.T) {
 	pageHTMLBytes, _ := ioutil.ReadFile("../../../samples/v9.0.4/en/lifeform/technologyDetails_1.html")
 	details, err := NewExtractor().ExtractTechnologyDetails(pageHTMLBytes)
