@@ -4080,10 +4080,7 @@ func getMessages[T any](b *OGame, maxPage int64, tabID ogame.MessagesTabID, extr
 		msgs := make([]T, 0)
 		for _, m := range res.Messages {
 			doc := ([]byte)(m.(string))
-			newMessage, fakePage, _ := extractor(doc)
-			if fakePage != 0 {
-				return msgs, errors.New("fakePage is not 0")
-			}
+			newMessage, _, _ := extractor(doc)
 			msgs = append(msgs, newMessage...)
 		}
 		return msgs, nil
