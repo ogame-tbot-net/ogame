@@ -4306,21 +4306,17 @@ func (b *OGame) getEspionageReportFor(coord ogame.Coordinate) (ogame.EspionageRe
 }
 
 func (b *OGame) getDeleteMessagesToken() (string, error) {
-	if b.IsVGreaterThanOrEqual("11.14.0-beta9") {
-		pageHTML, _ := b.getPageContent(url.Values{"page": {"ingame"}, "component": {"messages"}})
-		tokenM := regexp.MustCompile(`name='token' value='([^']+)'`).FindSubmatch(pageHTML)
-		if len(tokenM) != 2 {
-			return "", errors.New("token not found")
-		}
-		return string(tokenM[1]), nil
-	} else {
-		pageHTML, _ := b.getPageContent(url.Values{"page": {"messages"}, "tab": {"20"}, "ajax": {"1"}})
-		tokenM := regexp.MustCompile(`var token = "([^']+)"`).FindSubmatch(pageHTML)
-		if len(tokenM) != 2 {
-			return "", errors.New("token not found")
-		}
-		return string(tokenM[1]), nil
+	var tmp struct {
+		NewAjaxToken string
 	}
+	pageJson, err := b.getPageMessages(1, EspionageMessagesTabID)
+	if err != nil {
+		return "", err
+	}
+	if err := json.Unmarshal(pageJson, &tmp); err != nil {
+		return "", err
+	}
+	return tmp.NewAjaxToken, nil
 }
 
 func (b *OGame) deleteMessage(msgID int64) error {
@@ -4328,58 +4324,33 @@ func (b *OGame) deleteMessage(msgID int64) error {
 	if err != nil {
 		return err
 	}
-	by := []byte{}
-	err = nil
-
-	if b.IsVGreaterThanOrEqual("11.14.0-beta9") {
-		payload := url.Values{
-			"messageId": {utils.FI64(msgID)},
-			"token":     {token},
-		}
-		by, err = b.postPageContent(url.Values{"page": {"componentOnly"}, "component": {"messages"}, "asJson": {"1"}, "action": {"flagDeleted"}}, payload)
-		if err != nil {
-			return err
-		}
-
-		var res struct {
-			ServerLang   string `json:"js_serverlang"`
-			ServerID     string `json:"js_serverid"`
-			Status       string `json:"status"`
-			Message      string `json:"message"`
-			Components   []any  `json:"components"`
-			NewAjaxToken string `json:"newAjaxToken"`
-		}
-		if err := json.Unmarshal(by, &res); err != nil {
-			return errors.New("unable to find message id " + utils.FI64(msgID))
-		}
-		if res.Status != "success" {
-			return errors.New("unable to find message id " + utils.FI64(msgID))
-		}
-	} else {
-		payload := url.Values{
-			"messageId": {utils.FI64(msgID)},
-			"action":    {"103"},
-			"ajax":      {"1"},
-			"token":     {token},
-		}
-		by, err = b.postPageContent(url.Values{"page": {"messages"}}, payload)
-		if err != nil {
-			return err
-		}
-
-		var res map[string]any
-		if err := json.Unmarshal(by, &res); err != nil {
-			return errors.New("unable to find message id " + utils.FI64(msgID))
-		}
-		if val, ok := res[utils.FI64(msgID)]; ok {
-			if valB, ok := val.(bool); !ok || !valB {
-				return errors.New("unable to find message id " + utils.FI64(msgID))
-			}
-		} else {
-			return errors.New("unable to find message id " + utils.FI64(msgID))
-		}
+	vals := url.Values{
+		"page":      {"componentOnly"},
+		"component": {"messages"},
+		"asJson":    {"1"},
+		"action":    {"flagDeleted"},
+	}
+	payload := url.Values{
+		"token":     {token},
+		"messageId": {utils.FI64(msgID)},
+	}
+	by, err := b.postPageContent(vals, payload)
+	if err != nil {
+		return err
 	}
 
+	var res map[string]any
+	if err := json.Unmarshal(by, &res); err != nil {
+		return errors.New("unable to find message id " + utils.FI64(msgID))
+	}
+	fmt.Println(res)
+	if val, ok := res["status"]; ok {
+		if valB, ok := val.(string); !ok || valB != "success" {
+			return errors.New("unable to find message id " + utils.FI64(msgID) + " : " + res["message"].(string))
+		}
+	} else {
+		return errors.New("unable to find message id " + utils.FI64(msgID))
+	}
 	return nil
 }
 
