@@ -2,14 +2,15 @@ package ogame
 
 import (
 	"errors"
-	"github.com/alaingilbert/ogame/pkg/utils"
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 	"regexp"
 	"sort"
 	"strings"
 	"unicode"
+
+	"github.com/alaingilbert/ogame/pkg/utils"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 // ParseCoord parse a coordinate from a string
@@ -705,4 +706,10 @@ func ShipName2ID(name string) ID {
 		"первопроходец":      PathfinderID,
 	}
 	return nameMap[processedString]
+}
+
+// DoParseCoord parse a coordinate from a string and ignore errors
+func DoParseCoord(str string) (coord Coordinate) {
+	coord, _ = ParseCoord(str)
+	return coord
 }
